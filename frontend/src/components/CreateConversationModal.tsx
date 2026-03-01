@@ -5,11 +5,13 @@ import '../styles/CreateConversationModal.css';
 interface CreateConversationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  preselectedCustomerId?: string;
+  onSuccess?: () => void;
 }
 
-export function CreateConversationModal({ isOpen, onClose }: CreateConversationModalProps) {
+export function CreateConversationModal({ isOpen, onClose, preselectedCustomerId, onSuccess }: CreateConversationModalProps) {
   const [title, setTitle] = useState('');
-  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState(preselectedCustomerId || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -28,8 +30,11 @@ export function CreateConversationModal({ isOpen, onClose }: CreateConversationM
     try {
       await createConversation(selectedCustomerId, title.trim());
       setTitle('');
-      setSelectedCustomerId('');
+      if (!preselectedCustomerId) {
+        setSelectedCustomerId('');
+      }
       onClose();
+      onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create conversation');
     } finally {
@@ -61,7 +66,7 @@ export function CreateConversationModal({ isOpen, onClose }: CreateConversationM
                 setSelectedCustomerId(e.target.value);
                 setError('');
               }}
-              disabled={loading}
+              disabled={loading || !!preselectedCustomerId}
             >
               <option value="">-- Choose a customer --</option>
               {customers.map((customer) => (

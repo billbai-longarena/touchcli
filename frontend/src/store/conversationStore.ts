@@ -80,6 +80,7 @@ interface ConversationStore {
   fetchCustomers: () => Promise<void>;
   fetchOpportunities: () => Promise<void>;
   createConversation: (customerId: string, title: string) => Promise<Conversation>;
+  createOpportunity: (data: { customer_id: string; title: string; amount: number; stage: string }) => Promise<Opportunity>;
   sendMessage: (conversationId: string, content: string) => Promise<Message>;
   retryMessage: (conversationId: string, messageId: string, content: string) => Promise<Message>;
   subscribeToMessages: () => void;
@@ -172,6 +173,23 @@ export const useConversationStore = create<ConversationStore>((set) => ({
       return newConversation;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create conversation';
+      set({ error: errorMessage, loading: false });
+      throw error;
+    }
+  },
+
+  createOpportunity: async (data) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await apiClient.post('/opportunities', data);
+      const newOpportunity = response.data;
+      set((state) => ({
+        opportunities: [...state.opportunities, newOpportunity],
+        loading: false,
+      }));
+      return newOpportunity;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create opportunity';
       set({ error: errorMessage, loading: false });
       throw error;
     }

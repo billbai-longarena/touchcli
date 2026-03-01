@@ -1,17 +1,29 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useConversationStore } from '../store/conversationStore';
+import { CreateOpportunityModal } from '../components/CreateOpportunityModal';
 import '../styles/OpportunitiesPage.css';
 
 export function OpportunitiesPage() {
+  const [searchParams] = useSearchParams();
   const { opportunities, customers, fetchOpportunities, loading, error } =
     useConversationStore();
   const [filterStatus, setFilterStatus] = useState<string>('');
-  const [filterCustomerId, setFilterCustomerId] = useState<string>('');
+  const [filterCustomerId, setFilterCustomerId] = useState<string>(searchParams.get('customer') || '');
   const [sortBy, setSortBy] = useState<'amount' | 'date'>('amount');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchOpportunities();
   }, [fetchOpportunities]);
+
+  // Update filter if customer query param changes
+  useEffect(() => {
+    const customerParam = searchParams.get('customer');
+    if (customerParam) {
+      setFilterCustomerId(customerParam);
+    }
+  }, [searchParams]);
 
   const filteredOpportunities = opportunities
     .filter((opp) => !filterStatus || opp.stage === filterStatus)
@@ -47,9 +59,15 @@ export function OpportunitiesPage() {
 
   return (
     <div className="opportunities-page">
+      <CreateOpportunityModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
       <div className="opps-header">
         <h1>Opportunities</h1>
-        <button className="new-opp-btn">+ New Opportunity</button>
+        <button className="new-opp-btn" onClick={() => setIsModalOpen(true)}>
+          + New Opportunity
+        </button>
       </div>
 
       <div className="opps-filters">

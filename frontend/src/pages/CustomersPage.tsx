@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useConversationStore } from '../store/conversationStore';
+import { CreateConversationModal } from '../components/CreateConversationModal';
 import '../styles/CustomersPage.css';
 
 export function CustomersPage() {
-  const { customers, fetchCustomers, loading, error } = useConversationStore();
+  const navigate = useNavigate();
+  const { customers, fetchCustomers, loading, error, createConversation } = useConversationStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [isConversationModalOpen, setIsConversationModalOpen] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
@@ -19,8 +23,21 @@ export function CustomersPage() {
 
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
 
+  const handleStartConversation = () => {
+    setIsConversationModalOpen(true);
+  };
+
   return (
     <div className="customers-page">
+      <CreateConversationModal
+        isOpen={isConversationModalOpen}
+        onClose={() => setIsConversationModalOpen(false)}
+        preselectedCustomerId={selectedCustomerId || undefined}
+        onSuccess={() => {
+          setIsConversationModalOpen(false);
+          navigate('/conversations');
+        }}
+      />
       <div className="customers-container">
         <div className="customers-sidebar">
           <div className="sidebar-header">
@@ -108,8 +125,12 @@ export function CustomersPage() {
                 </div>
 
                 <div className="detail-actions">
-                  <button className="btn-primary">Start Conversation</button>
-                  <button className="btn-secondary">View Opportunities</button>
+                  <button className="btn-primary" onClick={handleStartConversation}>
+                    Start Conversation
+                  </button>
+                  <button className="btn-secondary" onClick={() => navigate(`/opportunities?customer=${selectedCustomerId}`)}>
+                    View Opportunities
+                  </button>
                 </div>
               </div>
             </div>
