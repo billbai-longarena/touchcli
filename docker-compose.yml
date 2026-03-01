@@ -1,0 +1,105 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: touchcli_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-touchcli_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-touchcli_password}
+      POSTGRES_DB: ${POSTGRES_DB:-touchcli_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/001_initial_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-touchcli_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - touchcli_network
+
+  # Redis Cache & Message Queue
+  redis:
+    image: redis:7-alpine
+    container_name: touchcli_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - touchcli_network
+
+  # Python FastAPI Agent Service
+  agent_service:
+    build:
+      context: .
+      dockerfile: backend/python/Dockerfile
+    container_name: touchcli_agent_service
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-touchcli_user}:${POSTGRES_PASSWORD:-touchcli_password}@postgres:5432/${POSTGRES_DB:-touchcli_db}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
+      LOG_FORMAT: ${LOG_FORMAT:-text}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      LANGGRAPH_API_KEY: ${LANGGRAPH_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend/python:/app/agent_service
+    networks:
+      - touchcli_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Go Gateway (WebSocket + HTTP Proxy)
+  gateway:
+    build:
+      context: .
+      dockerfile: backend/go/Dockerfile
+    container_name: touchcli_gateway
+    environment:
+      AGENT_SERVICE_URL: http://agent_service:8000
+      GATEWAY_PORT: ${GATEWAY_PORT:-8080}
+      GIN_MODE: ${GIN_MODE:-debug}
+    ports:
+      - "8080:8080"
+    depends_on:
+      agent_service:
+        condition: service_healthy
+    volumes:
+      - ./backend/go:/app
+    networks:
+      - touchcli_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  touchcli_network:
+    driver: bridge

@@ -1,17 +1,11 @@
 """
 TouchCLI Agent Service Package
-Phase 2: Backend infrastructure implementation
+Phase 2: Backend Infrastructure Implementation
 """
 
 __version__ = "0.1.0"
-__author__ = "TouchCLI Team"
+__author__ = "TouchCLI Team (Termite Protocol)"
 
-from agent_service.models import Base
-from agent_service.db import SessionLocal, get_db, engine
+from .main import app
 
-__all__ = [
-    "Base",
-    "SessionLocal",
-    "get_db",
-    "engine",
-]
+__all__ = ["app"]

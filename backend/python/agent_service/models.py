@@ -1,213 +1,121 @@
 """
-SQLAlchemy ORM Models for TouchCLI
-Maps Phase 1 database schema to Python models
+SQLAlchemy ORM Models for TouchCLI Agent Service
+Maps to Phase 1 schema (db/001_initial_schema.sql)
 """
 
-from sqlalchemy import (
-    Column, String, Integer, Float, Boolean, DateTime, Text, JSON, UUID,
-    ForeignKey, Index, Enum, UniqueConstraint, CheckConstraint, func
-)
+from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean, Numeric, ForeignKey, Index, UniqueConstraint, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID, JSON
 from datetime import datetime
-import enum
 import uuid
 
 Base = declarative_base()
 
 
-# ============================================================================
-# Enums
-# ============================================================================
-
-class UserRole(str, enum.Enum):
-    """User role enumeration"""
-    admin = "admin"
-    manager = "manager"
-    salesperson = "salesperson"
-    analyst = "analyst"
-
-
-class ConversationMode(str, enum.Enum):
-    """Conversation mode enumeration"""
-    text = "text"
-    voice = "voice"
-    hybrid = "hybrid"
-
-
-class ConversationStatus(str, enum.Enum):
-    """Conversation status enumeration"""
-    active = "active"
-    paused = "paused"
-    completed = "completed"
-    archived = "archived"
-
-
-class CustomerType(str, enum.Enum):
-    """Customer type enumeration"""
-    individual = "individual"
-    company = "company"
-
-
-class OpportunityStatus(str, enum.Enum):
-    """Opportunity sales stage enumeration"""
-    discovery = "discovery"
-    proposal = "proposal"
-    negotiation = "negotiation"
-    closed_won = "closed_won"
-    closed_lost = "closed_lost"
-
-
-class AgentType(str, enum.Enum):
-    """Agent type enumeration"""
-    router = "router"
-    sales = "sales"
-    data = "data"
-    strategy = "strategy"
-    sentinel = "sentinel"
-    memory = "memory"
-
-
-class ActivityAction(str, enum.Enum):
-    """Activity log action enumeration"""
-    create = "create"
-    update = "update"
-    delete = "delete"
-    view = "view"
-    export = "export"
-
-
-class JobStatus(str, enum.Enum):
-    """Batch job status enumeration"""
-    pending = "pending"
-    running = "running"
-    completed = "completed"
-    failed = "failed"
-
-
-# ============================================================================
-# User & Authentication
-# ============================================================================
-
 class User(Base):
-    """User account model"""
+    """User model - Sales agents and team members"""
     __tablename__ = "users"
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String(255), unique=True, nullable=False, index=True)
     name = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.salesperson)
-    created_at = Column(DateTime, nullable=False, default=func.now())
-    updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
+    avatar_url = Column(Text)
+    role = Column(String(50), default="salesperson", index=True)
+    phone_number = Column(String(20))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    version = Column(Integer, default=1)
 
     # Relationships
-    conversations = relationship("Conversation", back_populates="user", foreign_keys="Conversation.user_id")
-    messages = relationship("Message", back_populates="sender", foreign_keys="Message.sender_id")
-    customers = relationship("Customer", back_populates="assigned_to_user")
-    activity_logs = relationship("ActivityLog", back_populates="actor")
+    conversations = relationship("Conversation", back_populates="user")
+    activities = relationship("ActivityLog", back_populates="user")
 
     __table_args__ = (
-        Index("idx_users_email", "email"),
         Index("idx_users_role", "role"),
-        CheckConstraint("email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$'", name="valid_email"),
+        Index("idx_users_created_at", "created_at"),
     )
 
-
-# ============================================================================
-# Customer & Opportunity
-# ============================================================================
 
 class Customer(Base):
     """Customer model"""
     __tablename__ = "customers"
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    type = Column(Enum(CustomerType), nullable=False, default=CustomerType.company)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False, index=True)
-    email = Column(String(255), index=True)
-    phone = Column(String(20), index=True)
-    assigned_to = Column(UUID, ForeignKey("users.id"), nullable=True)
-    tags = Column(JSON, default=list)
-    metadata = Column(JSON, default=dict)
-    created_at = Column(DateTime, nullable=False, default=func.now())
-    updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
+    email = Column(String(255), unique=True, index=True)
+    phone = Column(String(20))
+    company = Column(String(255), index=True)
+    industry = Column(String(100))
+    metadata = Column(JSON)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    version = Column(Integer, default=1)
 
     # Relationships
-    assigned_to_user = relationship("User", back_populates="customers")
     opportunities = relationship("Opportunity", back_populates="customer")
     conversations = relationship("Conversation", back_populates="customer")
-    activity_logs = relationship("ActivityLog", back_populates="customer", foreign_keys="ActivityLog.entity_id")
 
     __table_args__ = (
         Index("idx_customers_name", "name"),
-        Index("idx_customers_email", "email"),
-        Index("idx_customers_phone", "phone"),
-        Index("idx_customers_assigned_to", "assigned_to"),
+        Index("idx_customers_company", "company"),
     )
 
 
 class Opportunity(Base):
-    """Opportunity (sales deal) model"""
+    """Sales opportunity model"""
     __tablename__ = "opportunities"
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    customer_id = Column(UUID, ForeignKey("customers.id"), nullable=False, index=True)
-    name = Column(String(255), nullable=False, index=True)
-    description = Column(Text)
-    amount = Column(Float, nullable=False)
-    currency = Column(String(3), default="CNY")
-    status = Column(Enum(OpportunityStatus), nullable=False, default=OpportunityStatus.discovery, index=True)
-    probability = Column(Float, default=0.0)
-    expected_close_date = Column(DateTime)
-    created_at = Column(DateTime, nullable=False, default=func.now())
-    updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
-    metadata = Column(JSON, default=dict)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=False)
+    title = Column(String(255), nullable=False)
+    stage = Column(String(50), default="prospecting", index=True)
+    value = Column(Numeric(12, 2))
+    close_date = Column(DateTime)
+    notes = Column(Text)
+    metadata = Column(JSON)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    version = Column(Integer, default=1)
 
     # Relationships
     customer = relationship("Customer", back_populates="opportunities")
     conversations = relationship("Conversation", back_populates="opportunity")
-    activity_logs = relationship("ActivityLog", back_populates="opportunity", foreign_keys="ActivityLog.entity_id")
 
     __table_args__ = (
         Index("idx_opportunities_customer_id", "customer_id"),
-        Index("idx_opportunities_name", "name"),
-        Index("idx_opportunities_status", "status"),
-        CheckConstraint("amount > 0", name="positive_amount"),
-        CheckConstraint("probability >= 0 AND probability <= 1", name="valid_probability"),
+        Index("idx_opportunities_stage", "stage"),
     )
 
-
-# ============================================================================
-# Conversation & Messages
-# ============================================================================
 
 class Conversation(Base):
     """Conversation model"""
     __tablename__ = "conversations"
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID, ForeignKey("users.id"), nullable=False, index=True)
-    customer_id = Column(UUID, ForeignKey("customers.id"), nullable=True, index=True)
-    opportunity_id = Column(UUID, ForeignKey("opportunities.id"), nullable=True, index=True)
-    mode = Column(Enum(ConversationMode), nullable=False, default=ConversationMode.text)
-    status = Column(Enum(ConversationStatus), nullable=False, default=ConversationStatus.active, index=True)
-    summary_text = Column(Text)
-    created_at = Column(DateTime, nullable=False, default=func.now())
-    updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"))
+    opportunity_id = Column(UUID(as_uuid=True), ForeignKey("opportunities.id"))
+    title = Column(String(255))
+    type = Column(String(50), default="sales", index=True)
+    status = Column(String(50), default="active", index=True)
+    metadata = Column(JSON)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    version = Column(Integer, default=1)
 
     # Relationships
-    user = relationship("User", back_populates="conversations", foreign_keys="Conversation.user_id")
+    user = relationship("User", back_populates="conversations")
     customer = relationship("Customer", back_populates="conversations")
     opportunity = relationship("Opportunity", back_populates="conversations")
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
     agent_states = relationship("AgentState", back_populates="conversation", cascade="all, delete-orphan")
-    session_snapshots = relationship("SessionSnapshot", back_populates="conversation", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("idx_conversations_user_id", "user_id"),
         Index("idx_conversations_customer_id", "customer_id"),
         Index("idx_conversations_status", "status"),
-        Index("idx_conversations_created_at", "created_at"),
     )
 
 
@@ -215,124 +123,109 @@ class Message(Base):
     """Message model"""
     __tablename__ = "messages"
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    conversation_id = Column(UUID, ForeignKey("conversations.id"), nullable=False, index=True)
-    sender_id = Column(UUID, ForeignKey("users.id"), nullable=True, index=True)
-    sender_role = Column(String(50))  # "user", "agent", "system"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=False)
+    sender = Column(String(50), nullable=False)  # user, agent, system
     content = Column(Text, nullable=False)
-    content_type = Column(String(50), default="text")  # "text", "voice", "image", etc.
-    attachments = Column(JSON, default=list)
-    created_at = Column(DateTime, nullable=False, default=func.now(), index=True)
+    role = Column(String(50))  # user, assistant, system (for LLM compatibility)
+    metadata = Column(JSON)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    version = Column(Integer, default=1)
 
     # Relationships
     conversation = relationship("Conversation", back_populates="messages")
-    sender = relationship("User", back_populates="messages", foreign_keys="Message.sender_id")
 
     __table_args__ = (
         Index("idx_messages_conversation_id", "conversation_id"),
+        Index("idx_messages_sender", "sender"),
         Index("idx_messages_created_at", "created_at"),
     )
 
 
-# ============================================================================
-# Agent State & Checkpoints
-# ============================================================================
-
 class AgentState(Base):
-    """Agent state checkpoint model"""
+    """Agent state checkpoint for LangGraph"""
     __tablename__ = "agent_states"
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    conversation_id = Column(UUID, ForeignKey("conversations.id"), nullable=False, index=True)
-    agent_type = Column(Enum(AgentType), nullable=False, index=True)
-    state = Column(JSON, nullable=False)
-    checkpoint_id = Column(String(255), index=True)
-    created_at = Column(DateTime, nullable=False, default=func.now())
-    updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=False)
+    agent_name = Column(String(100), nullable=False)
+    checkpoint_id = Column(String(255))
+    state_data = Column(JSON, nullable=False)  # Serialized LangGraph state
+    metadata = Column(JSON)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    version = Column(Integer, default=1)
 
     # Relationships
     conversation = relationship("Conversation", back_populates="agent_states")
 
     __table_args__ = (
-        Index("idx_agent_states_conversation_agent", "conversation_id", "agent_type"),
-        UniqueConstraint("conversation_id", "agent_type", name="unique_conversation_agent"),
+        Index("idx_agent_states_conversation_id", "conversation_id"),
+        Index("idx_agent_states_agent_name", "agent_name"),
     )
 
-
-# ============================================================================
-# Activity & Audit Log
-# ============================================================================
 
 class ActivityLog(Base):
-    """Activity audit log model"""
+    """Activity audit log"""
     __tablename__ = "activity_log"
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    entity_type = Column(String(50), nullable=False, index=True)  # "customer", "opportunity", etc.
-    entity_id = Column(UUID, nullable=False, index=True)
-    action = Column(Enum(ActivityAction), nullable=False, index=True)
-    actor_id = Column(UUID, ForeignKey("users.id"), nullable=True)
-    changes = Column(JSON)
-    created_at = Column(DateTime, nullable=False, default=func.now(), index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    action = Column(String(100), nullable=False)
+    resource_type = Column(String(100))
+    resource_id = Column(UUID(as_uuid=True))
+    details = Column(JSON)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    version = Column(Integer, default=1)
 
     # Relationships
-    actor = relationship("User", back_populates="activity_logs")
-    # Dynamic relationship to customer/opportunity
-    customer = relationship("Customer", uselist=False, foreign_keys="ActivityLog.entity_id",
-                           primaryjoin="and_(ActivityLog.entity_type=='customer', ActivityLog.entity_id==Customer.id)",
-                           viewonly=True, back_populates="activity_logs")
-    opportunity = relationship("Opportunity", uselist=False, foreign_keys="ActivityLog.entity_id",
-                              primaryjoin="and_(ActivityLog.entity_type=='opportunity', ActivityLog.entity_id==Opportunity.id)",
-                              viewonly=True, back_populates="activity_logs")
+    user = relationship("User", back_populates="activities")
 
     __table_args__ = (
-        Index("idx_activity_log_entity", "entity_type", "entity_id"),
-        Index("idx_activity_log_actor", "actor_id"),
-        Index("idx_activity_log_created", "created_at"),
+        Index("idx_activity_log_user_id", "user_id"),
+        Index("idx_activity_log_action", "action"),
+        Index("idx_activity_log_created_at", "created_at"),
     )
 
-
-# ============================================================================
-# Session & State Management
-# ============================================================================
 
 class SessionSnapshot(Base):
-    """Session state snapshot for resumption"""
+    """User session snapshots"""
     __tablename__ = "session_snapshots"
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID, ForeignKey("users.id"), nullable=False, index=True)
-    conversation_id = Column(UUID, ForeignKey("conversations.id"), nullable=False, index=True)
-    state = Column(JSON, nullable=False)
-    created_at = Column(DateTime, nullable=False, default=func.now(), index=True)
-
-    # Relationships
-    conversation = relationship("Conversation", back_populates="session_snapshots")
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    session_data = Column(JSON, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    version = Column(Integer, default=1)
 
     __table_args__ = (
-        Index("idx_session_snapshots_user_conversation", "user_id", "conversation_id"),
-        Index("idx_session_snapshots_created", "created_at"),
+        Index("idx_session_snapshots_user_id", "user_id"),
+        Index("idx_session_snapshots_is_active", "is_active"),
     )
 
 
-# ============================================================================
-# Batch Jobs
-# ============================================================================
-
 class BatchJob(Base):
-    """Batch job processing model (for exports, syncs, etc.)"""
+    """Async batch job tracking (for Celery)"""
     __tablename__ = "batch_jobs"
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    job_type = Column(String(50), nullable=False, index=True)  # "export", "sync", "cleanup", etc.
-    status = Column(Enum(JobStatus), nullable=False, default=JobStatus.pending, index=True)
-    parameters = Column(JSON)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    task_id = Column(String(255), unique=True, nullable=False)
+    job_type = Column(String(100), nullable=False)
+    status = Column(String(50), default="pending", index=True)  # pending, processing, completed, failed
+    progress = Column(Numeric(5, 2), default=0)  # 0-100
+    input_params = Column(JSON)
     result = Column(JSON)
-    created_at = Column(DateTime, nullable=False, default=func.now())
+    error_message = Column(Text)
     started_at = Column(DateTime)
     completed_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    version = Column(Integer, default=1)
 
     __table_args__ = (
-        Index("idx_batch_jobs_type_status", "job_type", "status"),
-        Index("idx_batch_jobs_created", "created_at"),
+        Index("idx_batch_jobs_status", "status"),
+        Index("idx_batch_jobs_task_id", "task_id"),
     )
