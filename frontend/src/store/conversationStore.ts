@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import apiClient from '../api/client';
 import { wsClient, type WebSocketFrame } from '../api/websocket';
+import { useAuthStore } from './authStore';
 
 export interface Message {
   id: string;

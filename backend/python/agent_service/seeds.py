@@ -38,6 +38,7 @@ def create_test_data(db: Session):
             email="alice.smith@touchcli.local",
             name="Alice Smith",
             role="salesperson",
+            preferred_locale="en-US",
             phone_number="+1-555-0101",
         ),
         User(
@@ -45,6 +46,7 @@ def create_test_data(db: Session):
             email="bob.johnson@touchcli.local",
             name="Bob Johnson",
             role="salesperson",
+            preferred_locale="en-US",
             phone_number="+1-555-0102",
         ),
         User(
@@ -52,6 +54,7 @@ def create_test_data(db: Session):
             email="carol.martinez@touchcli.local",
             name="Carol Martinez",
             role="sales_manager",
+            preferred_locale="zh-CN",
             phone_number="+1-555-0103",
         ),
     ]
@@ -141,9 +144,11 @@ def create_test_data(db: Session):
             customer_id=customers[0].id,
             opportunity_id=opportunities[0].id,
             title="Enterprise deal discussion",
+            mode="text",
             type="sales",
+            locale=users[0].preferred_locale,
             status="active",
-            metadata={"agent_count": 3, "context": "Follow-up on proposal"},
+            metadata={"agent_count": 3, "context": "Follow-up on proposal", "locale": users[0].preferred_locale},
         ),
         Conversation(
             id=uuid4(),
@@ -151,9 +156,11 @@ def create_test_data(db: Session):
             customer_id=customers[1].id,
             opportunity_id=opportunities[1].id,
             title="Technical requirements gathering",
+            mode="text",
             type="sales",
+            locale=users[1].preferred_locale,
             status="active",
-            metadata={"agent_count": 2, "context": "API integration scope"},
+            metadata={"agent_count": 2, "context": "API integration scope", "locale": users[1].preferred_locale},
         ),
     ]
     

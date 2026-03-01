@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useConversationStore } from '../store/conversationStore';
 import { CreateConversationModal } from '../components/CreateConversationModal';
+import { CreateCustomerModal } from '../components/CreateCustomerModal';
 import '../styles/CustomersPage.css';
 
 export function CustomersPage() {
   const navigate = useNavigate();
-  const { customers, fetchCustomers, loading, error, createConversation } = useConversationStore();
+  const { customers, fetchCustomers, loading, error } = useConversationStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [isConversationModalOpen, setIsConversationModalOpen] = useState(false);
+  const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
@@ -38,11 +40,19 @@ export function CustomersPage() {
           navigate('/conversations');
         }}
       />
+      <CreateCustomerModal
+        isOpen={isCreateCustomerModalOpen}
+        onClose={() => setIsCreateCustomerModalOpen(false)}
+      />
       <div className="customers-container">
         <div className="customers-sidebar">
           <div className="sidebar-header">
             <h2>Customers</h2>
-            <button className="new-customer-btn" title="Create new customer">
+            <button
+              className="new-customer-btn"
+              title="Create new customer"
+              onClick={() => setIsCreateCustomerModalOpen(true)}
+            >
               +
             </button>
           </div>

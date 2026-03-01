@@ -3,7 +3,7 @@ TouchCLI Agent Service - FastAPI Backend
 Phase 2: Backend Infrastructure Implementation
 """
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -59,6 +59,50 @@ def _parse_cors_origins() -> List[str]:
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]
+
+
+SUPPORTED_LOCALES = {"en-US", "zh-CN"}
+LOCALE_LANGUAGE_DEFAULTS = {
+    "en": "en-US",
+    "zh": "zh-CN",
+}
+
+
+def _normalize_locale(raw: Optional[str]) -> Optional[str]:
+    """Normalize locale input into xx-YY and limit to supported locales."""
+    if not raw:
+        return None
+
+    value = raw.strip()
+    if not value:
+        return None
+
+    # Accept-Language can include comma-separated candidates with q-values.
+    value = value.split(",")[0].strip()
+    value = value.split(";")[0].strip()
+    value = value.replace("_", "-")
+
+    parts = value.split("-")
+    if len(parts) == 1:
+        return LOCALE_LANGUAGE_DEFAULTS.get(parts[0].lower())
+
+    normalized = f"{parts[0].lower()}-{parts[1].upper()}"
+    if normalized in SUPPORTED_LOCALES:
+        return normalized
+    return None
+
+
+def _resolve_locale(
+    request_locale: Optional[str],
+    accept_language: Optional[str],
+    preferred_locale: Optional[str],
+) -> str:
+    """Resolve locale by priority: request body > Accept-Language > user pref > default."""
+    for candidate in (request_locale, accept_language, preferred_locale, "en-US"):
+        normalized = _normalize_locale(candidate)
+        if normalized:
+            return normalized
+    return "en-US"
 
 
 app = FastAPI(
@@ -182,7 +226,8 @@ async def health_check(db: Session = Depends(get_db)):
 async def create_conversation(
     req: ConversationCreate,
     db: Session = Depends(get_db),
-    user_id: UUID = Depends(get_current_user)
+    user_id: UUID = Depends(get_current_user),
+    accept_language: Optional[str] = Header(default=None, alias="Accept-Language"),
 ):
     """
     Start a new conversation.
@@ -194,6 +239,21 @@ async def create_conversation(
     Returns:
         Conversation object with metadata
     """
+
+    current_user = db.query(User).filter(User.id == user_id).first()
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Unauthorized user")
+
+    resolved_locale = _resolve_locale(
+        request_locale=req.locale,
+        accept_language=accept_language,
+        preferred_locale=current_user.preferred_locale,
+    )
+
+    # Persist latest locale preference from explicit request/header.
+    if (req.locale or accept_language) and current_user.preferred_locale != resolved_locale:
+        current_user.preferred_locale = resolved_locale
+        db.add(current_user)
 
     # Validate customer_id and opportunity_id if provided
     if req.customer_id:
@@ -211,7 +271,9 @@ async def create_conversation(
         user_id=user_id,
         customer_id=req.customer_id,
         opportunity_id=req.opportunity_id,
-        mode=req.mode
+        mode=req.mode,
+        locale=resolved_locale,
+        metadata={"locale": resolved_locale},
     )
     db.add(conversation)
     db.commit()

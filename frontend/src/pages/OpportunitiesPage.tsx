@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useConversationStore } from '../store/conversationStore';
+import { useConversationStore, type Opportunity } from '../store/conversationStore';
 import { CreateOpportunityModal } from '../components/CreateOpportunityModal';
+import { OpportunityDetailModal } from '../components/OpportunityDetailModal';
 import '../styles/OpportunitiesPage.css';
 
 export function OpportunitiesPage() {
@@ -12,6 +13,8 @@ export function OpportunitiesPage() {
   const [filterCustomerId, setFilterCustomerId] = useState<string>(searchParams.get('customer') || '');
   const [sortBy, setSortBy] = useState<'amount' | 'date'>('amount');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   useEffect(() => {
     fetchOpportunities();
@@ -57,11 +60,25 @@ export function OpportunitiesPage() {
 
   const totalPipeline = filteredOpportunities.reduce((sum, opp) => sum + opp.amount, 0);
 
+  const handleOpenDetail = (opp: Opportunity) => {
+    setSelectedOpportunity(opp);
+    setIsDetailModalOpen(true);
+  };
+
   return (
     <div className="opportunities-page">
       <CreateOpportunityModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+      <OpportunityDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedOpportunity(null);
+        }}
+        opportunity={selectedOpportunity}
+        customer={selectedOpportunity ? customers.find((c) => c.id === selectedOpportunity.customer_id) ?? null : null}
       />
       <div className="opps-header">
         <h1>Opportunities</h1>
@@ -133,7 +150,7 @@ export function OpportunitiesPage() {
               {filteredOpportunities.map((opp) => {
                 const customer = customers.find((c) => c.id === opp.customer_id);
                 return (
-                  <div key={opp.id} className="opp-card">
+                  <div key={opp.id} className="opp-card" onClick={() => handleOpenDetail(opp)} style={{ cursor: 'pointer' }}>
                     <div className="opp-card-header">
                       <div className="opp-title">
                         <h3>{opp.title}</h3>
@@ -161,7 +178,7 @@ export function OpportunitiesPage() {
                     </div>
 
                     <div className="opp-card-footer">
-                      <button className="action-btn">View Details</button>
+                      <small>Click to view details</small>
                     </div>
                   </div>
                 );

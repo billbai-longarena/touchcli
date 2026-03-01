@@ -1,3 +1,4 @@
+/* Reuse modal styles from CreateConversationModal */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -86,12 +87,7 @@
   color: #1f2937;
 }
 
-.required {
-  color: #ef4444;
-}
-
-.form-group input,
-.form-group select {
+.form-group input {
   padding: 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -100,24 +96,25 @@
   transition: border-color 0.2s ease;
 }
 
-.form-group input:focus,
-.form-group select:focus {
+.form-group input:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.form-group input:disabled,
-.form-group select:disabled {
+.form-group input:disabled {
   background: #f9fafb;
   color: #9ca3af;
   cursor: not-allowed;
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+.required {
+  color: #ef4444;
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: #6b7280;
 }
 
 .modal-error {
@@ -129,13 +126,13 @@
   font-size: 0.875rem;
 }
 
-.form-actions {
+.modal-actions {
   display: flex;
   gap: 0.75rem;
   margin-top: 0.5rem;
 }
 
-.form-actions button {
+.modal-actions button {
   flex: 1;
   padding: 0.75rem;
   border: none;
@@ -144,36 +141,56 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.cancel-btn {
+.btn-cancel {
   background: #e5e7eb;
   color: #1f2937;
 }
 
-.cancel-btn:hover:not(:disabled) {
+.btn-cancel:hover:not(:disabled) {
   background: #d1d5db;
 }
 
-.cancel-btn:disabled {
+.btn-cancel:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.submit-btn {
+.btn-create {
   background: #667eea;
   color: white;
 }
 
-.submit-btn:hover:not(:disabled) {
+.btn-create:hover:not(:disabled) {
   background: #5568d3;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-.submit-btn:disabled {
+.btn-create:disabled {
   background: #d1d5db;
   cursor: not-allowed;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive */
@@ -188,11 +205,7 @@
     padding: 1rem;
   }
 
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .form-actions {
+  .modal-actions {
     flex-direction: column;
   }
 }
