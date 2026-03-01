@@ -8,6 +8,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,14 +24,37 @@ const (
 	GATEWAY_PORT      = "8080"
 )
 
+func getCORSValidator() func(r *http.Request) bool {
+	allowedOriginsStr := os.Getenv("CORS_ALLOWED_ORIGINS")
+	if allowedOriginsStr == "" {
+		// Default to localhost for development
+		allowedOriginsStr = "http://localhost:3000,http://localhost:8000"
+	}
+
+	allowedOrigins := strings.Split(allowedOriginsStr, ",")
+
+	return func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			// Allow requests without Origin header (same-origin or non-browser)
+			return true
+		}
+
+		origin = strings.TrimSpace(origin)
+		for _, allowed := range allowedOrigins {
+			if origin == strings.TrimSpace(allowed) {
+				return true
+			}
+		}
+		return false
+	}
+}
+
 var (
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			// TODO: Implement proper CORS origin checking
-			return true
-		},
+		CheckOrigin:     getCORSValidator(),
 	}
 )
 
