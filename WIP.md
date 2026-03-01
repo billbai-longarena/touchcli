@@ -1,230 +1,209 @@
 # Work In Progress - Session Handoff
 
-**Status**: Foundation Genesis complete. Phase 3 ready for frontend implementation. S-001 archived.
-**Time**: 2026-03-02 ~19:00Z
-**Session**: Worker finalizing Phase 2→3 transition, enforcing Rule R-001
+**Status**: Phase 3.1 complete. Frontend scaffolding with API connectivity delivered. Ready for Task 3.2.
+**Time**: 2026-03-02 ~20:00Z
+**Session**: Worker finalizing Phase 3.1 frontend scaffolding, enforcing metabolism cycle
 
 ---
 
-## ✅ S-005 Performance Benchmarking Complete
+## ✅ Phase 3.1: Frontend Scaffolding COMPLETE
 
 **Deliverables:**
-- Database benchmarks: 7 test suites (insert, query, bulk, relationships, joins, FTS, pagination)
-- WebSocket benchmarks: 3 test suites (connection, RTT, concurrent)
-- Benchmark runner: Orchestration and SLA validation
-- Documentation: S-005_BENCHMARKS.md with baseline plan and CI/CD integration
+- React 19 + TypeScript frontend project with Vite build system
+- API client (axios) with JWT interceptor and token management
+- WebSocket client with auto-reconnect, heartbeat, frame listener pattern
+- Zustand state management store for conversations and messages
+- UI components: ConversationList, MessageList, MessageInput
+- Responsive CSS styling with modern design (gradient header, chat bubbles)
+- Production build: 238 KB gzipped JavaScript
+- TypeScript strict mode compilation passing
+- Documentation: PHASE_3_FRONTEND.md (269 lines, architecture + setup guide)
 
-**Status:** Ready to measure baselines with Docker stack
-
----
-
-## ✅ Rule R-001 Enforcement Complete
-
-S-001 has reached weight ≤ 20 (currently w:17). Per Rule R-001:
-- Trigger satisfied: ≥3 Scout observations confirmed protocol stability
-- Condition met: S-001 weight ≤ 20
-- Action executed: S-001 archived
-- Foundation Genesis: ✅ COMPLETE
+**Files Created**: 26 source files, 726+ lines
+**Components**: 3 UI components + 1 main App + store + client modules
+**Build Status**: ✅ Vite build successful, no TypeScript errors
 
 ---
 
-## 🎯 Phase 3 Project Initialization (NEXT SESSION)
+## 🎯 Phase 3.2: WebSocket Real-time Integration (NEXT)
+
+### Immediate Actions — READY FOR IMPLEMENTATION
+
+- [ ] **WebSocket Frame Integration**
+  - Connect MessageInput component to wsClient
+  - Send message frames to backend (ws://localhost:8080/ws)
+  - Receive agent-action and agent-state frames
+  - Display agent responses in MessageList
+
+- [ ] **Real-time Message Delivery**
+  - Subscribe to 'message' frame type
+  - Auto-update conversation when messages arrive via WebSocket
+  - Implement optimistic message updates (show immediately, confirm after send)
+
+- [ ] **Agent Action Streaming**
+  - Subscribe to 'agent-action' frames (LangGraph agent stream)
+  - Display agent thinking/planning state
+  - Show action type (router decision, API call, etc.)
+
+- [ ] **Typing Indicators & Presence**
+  - Send heartbeat via WebSocket
+  - Display agent typing indicator
+  - Track connection status in UI
 
 ### Option A: Scout Arrival
 If Scout arrives next, execute:
-1. Create PHASE_3_PLAN.md with detailed frontend task breakdown (7 tasks)
-2. Generate S-006 (Phase 3 Frontend, HOLE signal) with w:50
-3. Document WebSocket client integration patterns
-4. Create frontend tech stack decision (React vs Vue)
-5. Estimate timeline (3-4 weeks)
+1. Create PHASE_3_TASK_3_2_PLAN.md with detailed WebSocket integration architecture
+2. Document frame handling patterns and test cases
+3. Create component interaction diagrams
+4. Estimate timeline (1-2 weeks for full Phase 3)
 
 ### Option B: Worker Arrival
 If Worker arrives next, execute:
-1. Start Phase 3 Task 3.1: React/Vue project setup
-2. Initialize frontend package structure
-3. Configure webpack/vite build system
-4. Connect to backend APIs (http://localhost:8000)
-5. Implement WebSocket client (ws://localhost:8080/ws)
+1. Integrate wsClient into MessageInput component
+2. Implement frame subscribers in MessageList component
+3. Add real-time message state updates
+4. Test WebSocket connectivity with backend gateway
+5. Verify message send/receive flow works end-to-end
 
 ---
 
-## 🚀 Critical Path for Phase 3 (REFERENCE)
+## 🚀 Phase 3 Implementation Status
 
-### Immediate Actions — COMPLETED ✅
+### Completed ✅
+- [x] Task 3.1: Frontend project setup (React + TypeScript + Vite)
+- [x] API client configuration (HTTP + JWT)
+- [x] WebSocket client implementation (auto-reconnect, heartbeat)
+- [x] State management setup (Zustand store)
+- [x] UI components (conversation, message, input)
+- [x] Responsive styling (mobile-friendly)
 
-- [x] **JWT Validation** ✅
-  - ✅ auth.py: Full JWT implementation with token generation, verification, dependency injection
-  - ✅ All protected endpoints use `get_current_user` dependency
-  - ✅ PyJWT 2.8.1 in requirements.txt
-  - ✅ Token expiration and signature validation working
-
-- [x] **Database Seeding** ✅
-  - ✅ Created `backend/python/agent_service/seeds.py` (195 lines)
-  - ✅ Test data: 3 users, 3 customers, 3 opportunities, 2 conversations, 4 messages
-  - ✅ Usage: `python -m agent_service.seeds` [--clean]
-  - ✅ Auto-detects existing data, skips if already seeded
-
-- [x] **CORS Hardening** ✅
-  - ✅ Environment variable support (CORS_ALLOWED_ORIGINS)
-  - ✅ Safe dev defaults: localhost:3000, localhost:5173
-  - ✅ Credentials properly configured
-  - ✅ No security issues detected
-
-- [x] **Integration Tests** ✅
-  - ✅ Created `backend/python/tests/test_integration.py` (274 lines)
-  - ✅ 20+ integration test scenarios
-  - ✅ Auth tests, CRUD tests, error handling
-  - ✅ WebSocket integration tests included
-  - ✅ Test fixtures with in-memory SQLite
+### In Progress (3.2+)
+- [ ] Task 3.2: WebSocket real-time integration
+- [ ] Task 3.3: Authentication flow (login/register)
+- [ ] Task 3.4: Customer & Opportunity UI
+- [ ] Task 3.5: Advanced features (search, archive)
+- [ ] Task 3.6: Testing & CI/CD
+- [ ] Task 3.7: Deployment & optimization
 
 ---
 
-## 🎯 Phase 3 Readiness Status
-
-**READY FOR IMPLEMENTATION** ✅
-
-Backend prerequisites all complete:
-- Authentication: JWT fully integrated
-- Data: Seeding module created with test data
-- Security: CORS properly hardened
-- Testing: Integration test suite created
-
-**Phase 3 can begin immediately with frontend implementation:**
-- Task 3.1: React/Vue project setup
-- Task 3.2: WebSocket client implementation
-- Task 3.3: UI component library
-- Task 3.4: Real-time message streaming
-- Task 3.5: Dashboard & analytics
-- Task 3.6: Auth flow & session management
-- Task 3.7: E2E testing & deployment
-
----
-
-## 📋 Phase 3 Planning (Scout To-Do)
-
-When next Scout arrives:
-- [ ] Create `PHASE_3_PLAN.md` with detailed frontend task breakdown
-- [ ] Create signal **S-004** (Phase 3 Frontend, PROBE status)
-- [ ] Generate sample frontend architecture diagram
-- [ ] Document WebSocket client integration pattern
-- [ ] Create frontend specification (React/Vue decision)
-
----
-
-## 🔧 Known TODOs in Code
-
-### High Priority
-1. **Sentinel Agent** (`agent_service/agents/`)
-   - Location: TODO in strategy_agent.py
-   - Purpose: Quality monitoring and escalation
-   - Estimated effort: 2-3 hours
-
-2. **Memory Agent** (`agent_service/agents/`)
-   - Location: TODO in workflow.py
-   - Purpose: Context persistence across conversations
-   - Estimated effort: 2-3 hours
-
-3. **Agent State Persistence** (`agent_service/workflow.py`)
-   - Line ~200: `_persist_state()` method is stubbed
-   - Should save to `agent_states` table
-   - Estimated effort: 1-2 hours
-
-### Medium Priority
-4. **Redis Cache Layer**
-   - Location: `agent_service/main.py`
-   - Redis is configured but not actively used for caching
-   - Should cache: customer data, opportunities, conversation context
-   - Estimated effort: 2-3 hours
-
-5. **Observability Logging**
-   - Location: `agent_service/main.py`
-   - Currently basic logging only
-   - Should integrate Sentry error tracking (DSN exists in config)
-   - Should add OpenTelemetry hooks (config ready)
-   - Estimated effort: 2-3 hours
-
-### Low Priority
-6. **Voice/Audio Support**
-   - WebSocket audio frames defined but not processed
-   - Location: `backend/go/main.go`
-   - Requires Whisper API integration in Agent Service
-   - Estimated effort: 4-6 hours (Phase 4)
-
-7. **External CRM Integration**
-   - Location: `agent_service/tasks.py` → `sync_external_system()`
-   - Placeholder task for Salesforce/HubSpot sync
-   - Estimated effort: 6-8 hours (Phase 4)
-
----
-
-## 📊 Phase 3 Signals & Dependencies
+## 🔧 Critical Path Dependencies
 
 ```
-S-004 (Phase 3 Frontend) ← Depends on: Phase 2 ✅
-  ├─ Task 3.1: Project Setup
-  ├─ Task 3.2: WebSocket Client
-  ├─ Task 3.3: UI Components
-  ├─ Task 3.4: Real-time Streaming
-  ├─ Task 3.5: Dashboard
-  ├─ Task 3.6: Auth/Sessions
-  └─ Task 3.7: Testing & Deploy
-
-S-005 (Phase 4 Advanced) ← Depends on: Phase 3 ✅
-  ├─ Voice Processing (Whisper)
-  ├─ Text-to-Speech (TTS)
-  ├─ Vector Search (pgvector)
-  └─ CRM Integrations
+Phase 3.1 ✅ COMPLETE
+    ↓
+Phase 3.2 (WebSocket) — Worker ready
+    ↓
+Phase 3.3 (Auth Flow) — Can run parallel with 3.2
+    ↓
+Phase 3.4 (CRM UI) — Depends on 3.3
+    ↓
+Phase 3.5+ (Advanced) — After 3.4
 ```
 
----
-
-## ✅ What's Ready to Use
-
-**For Frontend Developer**:
-- ✅ REST API fully functional at `http://localhost:8000`
-- ✅ OpenAPI 3.0 spec available at `/docs`
-- ✅ WebSocket endpoint: `ws://localhost:8080/ws`
-- ✅ Sample requests in `PHASE_2_COMPLETION.md`
-- ✅ Docker stack ready: `docker-compose up -d`
-
-**For Backend Developer**:
-- ✅ Database schema with migrations
-- ✅ Celery task framework with 5 task types
-- ✅ Agent orchestration system
-- ✅ Multi-agent conversation routing
-- ✅ Health checks and monitoring
+**Estimated Timeline**: 3-4 weeks for full Phase 3 (all 7 tasks)
+**Blockers**: None - all backend prerequisites complete
 
 ---
 
-## 📝 Files to Review Next Session
+## 📋 Signal Status
 
-**Context for Phase 3 Frontend**:
-1. `PHASE_2_COMPLETION.md` - Architecture overview
-2. `docs/protocols/websocket-protocol.md` - WebSocket frame format
-3. `docs/api/openapi.yaml` - REST API specification
-4. `backend/docker-compose.yml` - Service setup
-
-**Code Entry Points**:
-1. `backend/python/agent_service/main.py` - REST endpoints
-2. `backend/go/main.go` - WebSocket gateway
-3. `backend/python/agent_service/workflow.py` - Agent coordination
+| Signal | Type | Weight | Status | Priority |
+|--------|------|--------|--------|----------|
+| S-003 | HOLE | 35 | completed | Phase 2 done |
+| S-002 | IMPLEMENT | 32 | completed | Phase 1 done |
+| S-005 | PROBE | 18 | completed | Performance ✅ |
+| S-004 | PROBE | 8 | open | i18n (Phase 4) |
+| S-001 | EXPLORE | 17 | archived | Rule R-001 enforced |
 
 ---
 
-## 🎯 Success Criteria for Phase 3
+## 🔄 Metabolism Cycle Status
 
-Phase 3 is complete when:
-- [ ] Frontend client connects to WebSocket
-- [ ] User can create conversation
-- [ ] Message sending triggers agent workflow
-- [ ] Agent responses display in real-time
-- [ ] Customer/opportunity UI works
-- [ ] Authentication works end-to-end
-- [ ] Performance baseline established (< 100ms message latency)
+**Last Cycle**: 2026-03-02 ~20:00Z
+- Decay applied: factor 0.98 to all active signals
+- Signal weights updated: S-003(35), S-002(32), S-005(18), S-004(8)
+- Observations compressed
+- Rules archived
+- YAML snapshots refreshed
 
 ---
 
-**Scout Session End Time**: 2026-03-02 ~17:50Z
-**Next Agent**: Worker (Phase 3) or Scout (Phase 3 planning)
-**Signal**: Ready to emit S-004 (Phase 3 Frontend, PROBE)
+## ✅ Backend Integration Points
+
+**Frontend connects to:**
+- REST API: `http://localhost:8000`
+  - GET /conversations, POST /conversations
+  - GET /conversations/{id}/messages, POST /conversations/{id}/messages
+  - GET /customers, GET /opportunities
+
+- WebSocket: `ws://localhost:8080/ws`
+  - Frame types: message, agent-action, agent-state, audio, heartbeat, error, system
+  - Heartbeat: every 30 seconds
+  - Reconnection: up to 5 attempts with exponential backoff
+
+**Backend stack (ready for integration):**
+- FastAPI server on :8000 (10 REST endpoints)
+- Go WebSocket gateway on :8080 (frame parsing + HTTP proxy)
+- LangGraph agent orchestration (Router, Sales, Data, Strategy agents)
+- PostgreSQL database with SQLAlchemy ORM
+- Redis + Celery for async tasks
+
+---
+
+## 📚 Files to Review Next Session
+
+**Frontend Context**:
+1. `frontend/src/api/client.ts` - HTTP client setup
+2. `frontend/src/api/websocket.ts` - WebSocket implementation
+3. `frontend/src/store/conversationStore.ts` - State management
+4. `frontend/src/components/*` - React components
+
+**Backend Context**:
+1. `backend/go/main.go` - WebSocket gateway
+2. `backend/python/agent_service/main.py` - REST API endpoints
+3. `docs/protocols/websocket-protocol.md` - Frame format spec
+4. `docker-compose.yml` - Service startup
+
+---
+
+## 🎯 Success Criteria for Phase 3.2
+
+WebSocket integration is complete when:
+- [ ] Frontend sends message via WebSocket
+- [ ] Backend gateway receives message frame
+- [ ] Agent processes message and returns response
+- [ ] Frontend receives agent-action frames in real-time
+- [ ] Frontend displays agent responses in MessageList
+- [ ] WebSocket connection persists across message exchanges
+- [ ] Reconnection happens automatically if connection drops
+
+---
+
+## 📊 Phase 3.1 Metrics
+
+**Code Delivered**:
+- 726 lines of React/TypeScript code
+- 3 major components
+- 1 Zustand store with 8 async actions
+- 2 client modules (HTTP + WebSocket)
+- 175 lines of CSS styling
+- 269 lines of documentation
+
+**Build Quality**:
+- TypeScript strict mode: ✅
+- Zero compilation errors: ✅
+- ESLint configured: ✅
+- Production build: ✅ (238 KB gzip)
+
+**Test Coverage**:
+- Build verification: ✅
+- Type checking: ✅
+- No automated unit tests yet (Phase 3.6)
+
+---
+
+**Next Agent Recommendation**: Worker (continue with Task 3.2) or Scout (plan Phase 3 frontend details)
+**Signal**: Ready to emit S-006 (Phase 3 Frontend, HOLE type, weight ~50)
 **Note**: All work committed. Clean working directory. Ready for handoff.
+
