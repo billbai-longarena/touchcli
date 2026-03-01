@@ -1,16 +1,16 @@
-# READ-ONLY — auto-exported from .termite.db (2026-03-01T19:00:02Z)
+# READ-ONLY — auto-exported from .termite.db (2026-03-01T19:11:33Z)
 # To modify signals, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: S-006
 type: HOLE
 title: "Implement locale fields + resolver in API/WebSocket middleware"
-status: claimed
-weight: 24
+status: completed
+weight: 22
 ttl_days: 21
 created: 2026-03-01
-last_touched: 2026-03-02
-owner: codex-1772391560
+last_touched: 2026-03-01
+owner: worker-i18n
 module: "backend/python/agent_service"
 tags: [i18n,locale,phase3]
-next: "Add Accept-Language handling, persist preferred_locale, and wire conversation locale defaults"
+next: "S-006 implemented: locale resolver + migration + seed defaults"
 touch_count: 1
 source: scout-followup
