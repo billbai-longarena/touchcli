@@ -1,0 +1,23 @@
+# ConfigMap for non-sensitive configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: touchcli-config
+  namespace: touchcli
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+  GATEWAY_HOST: "0.0.0.0"
+  GATEWAY_PORT: "8080"
+  FRONTEND_URL: "https://touchcli.io"
+  VITE_API_URL: "https://api.touchcli.io"
+  VITE_WS_URL: "wss://api.touchcli.io/ws"
+  APP_NAME: "TouchCLI"
+  APP_VERSION: "1.0.0"
+  FEATURE_ADVANCED_SEARCH: "true"
+  FEATURE_REPORTS: "true"
+  FEATURE_MULTI_TENANT: "false"
+  ENABLE_METRICS: "true"
+  ENABLE_TRACING: "true"
