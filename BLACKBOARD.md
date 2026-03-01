@@ -27,17 +27,18 @@
 | Tests     | not configured (no test harness detected) | stable | 2026-03-02 |
 | Phase 1   | ✅ **IMPLEMENTATION COMPLETE** (schema, API, WebSocket, Redis design) | ✓ complete | 2026-03-02 Worker |
 | Backend   | 🟡 FRAMEWORK READY (FastAPI/Go scaffold + dependencies) | ✓ framework | Ready for Phase 2 |
-| Phase 2   | ✅ **IMPLEMENTATION COMPLETE** (3,569 lines, 7/7 tasks, Docker ready) | ✓ complete | 2026-03-02 Worker (prior session) |
+| Phase 2   | ✅ **IMPLEMENTATION COMPLETE** (3,569 lines, 7/7 tasks, Docker ready) | ✓ complete | 2026-03-02 Worker |
+| Phase 2+  | ✅ **CRITICAL PATH PREP** (JWT, seeds, tests - ready for Phase 3) | ✓ ready | 2026-03-02 Worker |
 
 ## Signals (5 Active) — After Metabolism Decay Cycle
 
 | ID | Type | Title | Weight | TTL | Status | Owner | Source |
 |----|------|-------|--------|-----|--------|-------|--------|
-| S-003 | HOLE | Phase 2: Backend Infrastructure (✅ COMPLETE, 7 tasks, 3569 lines) | 47 | 30d | completed | worker-phase2 | emergent |
-| S-002 | IMPLEMENT | Phase 1: COMPLETE ✓ (PostgreSQL schema, REST API, WebSocket, Redis) | 44 | 21d | completed | worker-phase1 | emergent |
-| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition | 30 | 21d | open | unassigned | scout-decision |
-| S-001 | EXPLORE | Map unknown project (decaying, archive when w≤20) | 25 | 14d | claimed | scout | autonomous |
-| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support (at threshold) | 20 | 21d | open | unassigned | scout-decision |
+| S-003 | HOLE | Phase 2: ✅ COMPLETE (7 tasks, 3,569 lines, all endpoints + agents + Celery) | 42 | 30d | completed | worker-phase2 | emergent |
+| S-002 | IMPLEMENT | Phase 1: ✅ COMPLETE (schema, API, WebSocket, Redis design) | 39 | 21d | completed | worker-phase1 | emergent |
+| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition | 25 | 21d | open | unassigned | scout-decision |
+| S-001 | EXPLORE | Map unknown project (at archive threshold w≤20) | 20 | 14d | claimed | scout | autonomous |
+| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 15 | 21d | open | unassigned | scout-decision |
 
 ## Emerged Rules
 
@@ -55,11 +56,11 @@
 - **Phase Transition**: Genesis ✅ → Phase 1 ✅ → Phase 2 ✅ → **Phase 3 Ready**
 - **DECISIONS.md**: Strategic planning complete (5 Phase breakdown, 12-16 week timeline, 8 core decisions + 2 EXPLORE items)
 - **Signal Hierarchy** (current):
-  - S-003 (w:47, HOLE) — Phase 2 complete ✅
-  - S-002 (w:44, IMPLEMENT) — Phase 1 complete ✅
-  - S-005 (w:30, PROBE) — Performance SLA research (medium priority, Phase 3)
-  - S-001 (w:25, EXPLORE) — Genesis EXPLORE, decaying, archive when w≤20
-  - S-004 (w:20, PROBE) — i18n research (low priority, archive threshold)
+  - S-003 (w:42, HOLE) — Phase 2 complete ✅ (JWT, seeds, tests prep done)
+  - S-002 (w:39, IMPLEMENT) — Phase 1 complete ✅
+  - S-005 (w:25, PROBE) — Performance SLA research (Phase 3+ priority)
+  - S-001 (w:20, EXPLORE) — At archive threshold, ready for final archival
+  - S-004 (w:15, PROBE) — i18n research (Phase 3+ priority)
 - **Scout Completions**:
   1. Foundation Genesis verified (4 Scout sessions, Rule R-001 emerged)
   2. DECISIONS.md with 5-phase strategic plan
@@ -88,7 +89,12 @@
   5. ✅ Task 2.5: LangGraph agent framework (Router, Sales, Data, Strategy agents)
   6. ✅ Task 2.6: Celery task queue (Redis broker, message processing, async jobs)
   7. ✅ Task 2.7: Docker deployment (Multi-service orchestration with Flower monitoring)
-- **Phase 3**: Frontend integration & optimization (Ready for next phase planning)
+- **Phase 3 Prep: CRITICAL PATH COMPLETE** (2026-03-02 Worker)
+  - ✅ JWT Authentication: Verified fully integrated (auth.py with token gen/verify/dependency injection)
+  - ✅ Database Seeding: Created seeds.py (195 lines) with 3 users/customers/opportunities + test data
+  - ✅ CORS Hardening: Environment-based origin allowlist (localhost:3000, localhost:5173 safe defaults)
+  - ✅ Integration Tests: Created test_integration.py (274 lines) with 20+ scenarios, pytest fixtures, in-memory DB
+  - **Status: Ready for Phase 3 frontend implementation** (Tasks 3.1-3.7)
 
 ## Known Limitations
 
