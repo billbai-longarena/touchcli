@@ -75,6 +75,9 @@ MAX_P95_MS=150 MAX_P99_MS=300 MAX_FAILURE_RATE=0 ./scripts/s005-latency-gate.sh
 
 # Run WebSocket ping/pong RTT probe
 SAMPLES=50 WS_URL=ws://localhost:8080/ws ./scripts/s005-websocket-probe.sh
+
+# Run gate with WebSocket enforcement enabled
+ENABLE_WS_GATE=1 WS_MAX_P99_MS=100 WS_SAMPLES=20 WS_URL=ws://localhost:8080/ws ./scripts/s005-latency-gate.sh
 ```
 
 ## How to Read Output

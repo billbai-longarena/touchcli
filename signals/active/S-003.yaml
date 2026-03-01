@@ -1,10 +1,10 @@
-# READ-ONLY — auto-exported from .termite.db (2026-03-01T18:32:51Z)
+# READ-ONLY — auto-exported from .termite.db (2026-03-01T18:35:07Z)
 # To modify signals, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: S-003
 type: HOLE
 title: "Implement Phase 2: Backend Infrastructure (Go Gateway + LangGraph)"
 status: completed
-weight: 38
+weight: 37
 ttl_days: 30
 created: 2026-03-02T01:21:50Z
 last_touched: 2026-03-02
