@@ -1,10 +1,10 @@
-# READ-ONLY — auto-exported from .termite.db (2026-03-01T17:57:19Z)
+# READ-ONLY — auto-exported from .termite.db (2026-03-01T18:06:07Z)
 # To modify signals, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: S-002
 type: IMPLEMENT
 title: "Backend scaffold & Agent framework (Python/Go + LangGraph + PostgreSQL+pgvector)"
 status: completed
-weight: 45
+weight: 42
 ttl_days: 21
 created: 2026-03-02T01:25:00Z
 last_touched: 2026-03-02
