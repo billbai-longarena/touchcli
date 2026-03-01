@@ -65,13 +65,11 @@
 
 ## 技术栈
 
-<!-- 在此填写你的技术栈 -->
-<!-- 例如：
-- **前端**: React / Vue / Next.js + TypeScript
-- **后端**: Node.js / Python / Go
-- **数据库**: PostgreSQL / MySQL / MongoDB
-- **其他**: Redis, Docker, etc.
--->
+- **协议运行时**: Bash (sh + bash 扩展，兼容 zsh)
+- **状态存储**: SQLite 3+ (WAL 模式，支持并发多 Agent)
+- **信号系统**: YAML 导出快照 + SQLite 主存储
+- **产物格式**: Markdown (BLACKBOARD / DECISIONS) + Git (commits + .pheromone)
+- **框架产物**: 白蚁协议本身（可被注入到任何 AI Agent 平台）
 
 ## 场基础设施 / Field Infrastructure
 
@@ -98,25 +96,38 @@
 
 ## 验证清单
 
-<!-- 根据宿主项目实际的构建/测试命令填写 -->
-<!-- | 改动类型 | 验证方式 |
+| 改动类型 | 验证方式 |
 | -------- | -------- |
-| 后端代码 | `cd backend && npm run build` 无报错 |
-| 前端代码 | `cd frontend && npm run build` 无报错 | -->
+| 协议脚本 | `bash -n scripts/field-*.sh` 通过；`shellcheck` 建议检查 |
+| Markdown 文档 | `TERMITE_PROTOCOL.md` 版本与 `.birth` 中 `termite-kernel` 一致 |
+| SQLite 数据库 | `sqlite3 .termite.db ".tables"` 返回预期的表结构 |
+| 信号导出 | `.termite.db` 的 active 信号与 `signals/active/` 快照同步 |
+| Git 状态 | `git status` 干净，无未提交的 .md 文件删除 |
 
 ## Build / Test / Dev Commands
 
-<!-- 根据宿主项目实际情况填写 -->
-<!-- | 操作 | 命令 |
+| 操作 | 命令 |
 | ---- | ---- |
-| 安装依赖 | `npm install` |
-| 开发运行 | `npm run dev` |
-| 构建 | `npm run build` |
-| 测试 | `npm run test` | -->
+| 到达仪式（每次新会话） | `./scripts/field-arrive.sh` （生成 .birth，设置态势） |
+| 感知与种姓判定 | 自动（由 field-arrive.sh 执行） |
+| 任务认领 | `./scripts/field-claim.sh claim <signal-id>` |
+| 信息素沉积 | `./scripts/field-deposit.sh` （会话结束时运行） |
+| 场代谢循环 | `./scripts/field-cycle.sh` （衰减过期信号，post-commit 自动触发） |
+| 脚本语法检查 | `bash -n scripts/field-*.sh` |
+| 代码格式检查 | `shellcheck scripts/field-*.sh` （可选） |
 
 ## Configuration & Secrets
 
-<!-- 在此说明环境变量和配置文件结构，不要包含实际密钥值 -->
+| 文件/变量 | 用途 | 说明 |
+|----------|------|------|
+| `.env` | 环境变量 | Termite 系统变量（TERMITE_*），不含宿主项目秘钥 |
+| `.termite-telemetry.yaml` | 跨蚁丘反馈 | 启用/禁用审计包上报，默认关闭 |
+| `.termite.db` | 协议运行态存储 | SQLite，WAL 模式，自动生成与管理 |
+| `TERMITE_REPO_URL` | 协议源仓库 | 升级时使用，默认 `billbai-longarena/Termite-Protocol` |
+| `TERMITE_DECAY_FACTOR` | 信号衰减系数 | 0.90-0.99，自适应衰减（默认 0.98） |
+| `TERMITE_ESCALATE_THRESHOLD` | 信号升级阈值 | 权重 > 此值时升级告警，默认 50 |
+
+**不包含敏感信息** — 本项目为协议框架，无应用级别的 API 密钥或数据库凭证。
 
 ## 分支治理（固定）
 
