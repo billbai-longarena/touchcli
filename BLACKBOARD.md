@@ -34,11 +34,11 @@
 
 | ID | Type | Title | Weight | TTL | Status | Owner | Source |
 |----|------|-------|--------|-----|--------|-------|--------|
-| S-003 | HOLE | Phase 2: ✅ COMPLETE (7 tasks, 3,569 lines, all endpoints + agents + Celery) | 36 | 30d | completed | worker-phase2 | emergent |
-| S-002 | IMPLEMENT | Phase 1: ✅ COMPLETE (schema, API, WebSocket, Redis design) | 33 | 21d | completed | worker-phase1 | emergent |
-| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition (✅ COMPLETE, 10 test suites) | 19 | 21d | completed | worker-perf | emergent |
+| S-003 | HOLE | Phase 2: ✅ COMPLETE (7 tasks, 3,569 lines, all endpoints + agents + Celery) | 35 | 30d | completed | worker-phase2 | emergent |
+| S-002 | IMPLEMENT | Phase 1: ✅ COMPLETE (schema, API, WebSocket, Redis design) | 32 | 21d | completed | worker-phase1 | emergent |
+| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition (✅ COMPLETE, 10 test suites) | 18 | 21d | completed | worker-perf | emergent |
 | S-001 | EXPLORE | Map unknown project (✅ ARCHIVED per Rule R-001: w≤20) | 17 | 14d | archived | scout | autonomous |
-| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 11 | 21d | open | unassigned | scout-decision |
+| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 8 | 21d | open | unassigned | scout-decision |
 
 ## Emerged Rules
 
@@ -53,13 +53,13 @@
 
 ## Notes for AI
 
-- **Project Timeline**: Genesis ✅ → Phase 1 ✅ → Phase 2 ✅ → Phase 3 Ready 🟡 → Phase 4+ (Planning)
+- **Project Timeline**: Genesis ✅ → Phase 1 ✅ → Phase 2 ✅ → Phase 3 🟢 In Progress (Task 3.1 complete, 3.2-3.7 pending) → Phase 4+ (Planning)
 - **DECISIONS.md**: Strategic planning complete (5 Phase breakdown, 12-16 week timeline, 8 core decisions + 2 EXPLORE items)
-- **Signal Hierarchy** (current):
-  - S-003 (w:39, HOLE) — Phase 2 complete ✅ (3,569 lines, all tasks)
-  - S-002 (w:36, IMPLEMENT) — Phase 1 complete ✅ (1,887 lines specs)
-  - S-005 (w:22, PROBE) — Performance benchmarks (suite created, ready for baselines)
-  - S-004 (w:12, PROBE) — i18n research (Phase 3+ priority)
+- **Signal Hierarchy** (current after decay 0.98):
+  - S-003 (w:35, HOLE) — Phase 2 complete ✅ (3,569 lines, all tasks)
+  - S-002 (w:32, IMPLEMENT) — Phase 1 complete ✅ (1,887 lines specs)
+  - S-005 (w:18, PROBE) — Performance benchmarks ✅ (10 test suites complete)
+  - S-004 (w:8, PROBE) — i18n research (Phase 3+ priority)
   - S-001 (w:17, EXPLORE) — ✅ ARCHIVED per Rule R-001 (w≤20 threshold reached)
 - **Completion Milestones**:
   1. ✅ Genesis verified (Rule R-001 emerged: Foundation Genesis Verified)
@@ -96,6 +96,18 @@
   - ✅ CORS Hardening: Environment-based origin allowlist (localhost:3000, localhost:5173 safe defaults)
   - ✅ Integration Tests: Created test_integration.py (274 lines) with 20+ scenarios, pytest fixtures, in-memory DB
   - **Status: Ready for Phase 3 frontend implementation** (Tasks 3.1-3.7)
+
+- **Phase 3.1 COMPLETE** (2026-03-02 Worker) — Frontend scaffolding & API connectivity
+  - ✅ Task 3.1: React + TypeScript frontend with Vite build system
+  - Project structure: 26 source files, 726+ lines across components, store, and styles
+  - ✅ API Client: Axios with JWT interceptor support, automatic token refresh on 401
+  - ✅ WebSocket Client: Native WebSocket with auto-reconnect (up to 5 attempts), 30s heartbeat, frame listener pattern
+  - ✅ State Management: Zustand store with conversation, message, customer, and opportunity data
+  - ✅ UI Components: ConversationList (sidebar), MessageList (chat), MessageInput (form), App wrapper
+  - ✅ Styling: Modern responsive CSS with gradient header, chat bubbles, mobile breakpoint at 768px
+  - ✅ Build Verification: TypeScript strict mode passes, Vite production build 238 KB gzipped
+  - Documentation: PHASE_3_FRONTEND.md (269 lines) with architecture, API mapping, next steps
+  - **Status: Task 3.1 ready, next Task 3.2 (WebSocket Real-time Integration)**
 
 - **S-005 Performance Benchmarks: IN PROGRESS** (2026-03-02 Worker)
   - ✅ Database Benchmarks: benchmarks.py (363 lines) with 7 test suites (insert, query, bulk, relationships, joins, FTS, pagination)
