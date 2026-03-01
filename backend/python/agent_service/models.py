@@ -22,6 +22,7 @@ class User(Base):
     name = Column(String(255), nullable=False)
     avatar_url = Column(Text)
     role = Column(String(50), default="salesperson", index=True)
+    preferred_locale = Column(String(10), default="en-US", index=True)
     phone_number = Column(String(20))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -34,6 +35,7 @@ class User(Base):
 
     __table_args__ = (
         Index("idx_users_role", "role"),
+        Index("idx_users_preferred_locale", "preferred_locale"),
         Index("idx_users_created_at", "created_at"),
     )
 
@@ -98,8 +100,11 @@ class Conversation(Base):
     customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"))
     opportunity_id = Column(UUID(as_uuid=True), ForeignKey("opportunities.id"))
     title = Column(String(255))
+    mode = Column(String(50), default="text", index=True)
     type = Column(String(50), default="sales", index=True)
+    locale = Column(String(10), default="en-US", index=True)
     status = Column(String(50), default="active", index=True)
+    summary_text = Column(Text)
     metadata = Column(JSON)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -115,6 +120,7 @@ class Conversation(Base):
     __table_args__ = (
         Index("idx_conversations_user_id", "user_id"),
         Index("idx_conversations_customer_id", "customer_id"),
+        Index("idx_conversations_locale", "locale"),
         Index("idx_conversations_status", "status"),
     )
 

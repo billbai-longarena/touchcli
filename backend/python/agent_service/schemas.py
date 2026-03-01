@@ -18,12 +18,14 @@ class UserCreate(BaseModel):
     email: EmailStr
     name: str = Field(..., min_length=1, max_length=255)
     role: str = Field(default="salesperson", pattern="^(admin|manager|salesperson|analyst)$")
+    preferred_locale: str = Field(default="en-US", pattern="^[a-z]{2}-[A-Z]{2}$")
 
 
 class UserUpdate(BaseModel):
     """User update request"""
     name: Optional[str] = Field(None, max_length=255)
     role: Optional[str] = Field(None, pattern="^(admin|manager|salesperson|analyst)$")
+    preferred_locale: Optional[str] = Field(None, pattern="^[a-z]{2}-[A-Z]{2}$")
 
 
 class UserResponse(BaseModel):
@@ -32,6 +34,7 @@ class UserResponse(BaseModel):
     email: str
     name: str
     role: str
+    preferred_locale: str
     created_at: datetime
     updated_at: datetime
 
@@ -149,6 +152,7 @@ class ConversationCreate(BaseModel):
     customer_id: Optional[UUID] = None
     opportunity_id: Optional[UUID] = None
     mode: str = Field(default="text", pattern="^(text|voice|hybrid)$")
+    locale: Optional[str] = Field(default=None, pattern="^[a-z]{2}-[A-Z]{2}$")
 
 
 class ConversationUpdate(BaseModel):
@@ -163,6 +167,7 @@ class ConversationResponse(BaseModel):
     user_id: UUID
     customer_id: Optional[UUID]
     opportunity_id: Optional[UUID]
+    locale: Optional[str]
     mode: str
     status: str
     summary_text: Optional[str]
