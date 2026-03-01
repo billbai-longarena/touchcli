@@ -1,0 +1,15 @@
+id: S-003
+type: HOLE
+title: "Implement Phase 2: Backend Infrastructure (Go Gateway + LangGraph)"
+status: open
+weight: 55
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "touchcli/backend"
+tags: [phase2, go, langgraph, websocket, agent]
+next: "Develop Gateway (Gin) + LangGraph framework + tool execution engine"
+touch_count: 0
+source: scout-strategic-review
+depends_on: ["S-002"]

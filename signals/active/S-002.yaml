@@ -1,16 +1,15 @@
-# READ-ONLY — auto-exported from .termite.db
-# Generated: 2026-03-02T01:25:00Z by Scout (emergence)
 id: S-002
-type: IMPLEMENT
-title: "Backend scaffold & Agent framework (Python/Go + LangGraph + PostgreSQL+pgvector)"
+type: HOLE
+title: "Implement Phase 1: Database & Communication Fundamentals"
 status: open
-weight: 50
-ttl_days: 21
-created: 2026-03-02T01:25:00Z
-last_touched: 2026-03-02T01:25:00Z
-owner: worker-needed
-module: "backend"
-tags: [worker, implementation, backend, agent, database]
-next: "Phase 1: FastAPI/Gin scaffold. Phase 2: Agent Router + Sales/Data/Strategy agents. Phase 3: PostgreSQL+pgvector setup."
-source: emergent
+weight: 60
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "touchcli/backend"
+tags: [phase1, schema, api, websocket, redis]
+next: "Define PostgreSQL schema + API spec + WebSocket protocol + Redis keys"
 touch_count: 0
+source: scout-strategic-review
+depends_on: ["S-001"]
