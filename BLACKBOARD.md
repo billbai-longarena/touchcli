@@ -27,17 +27,17 @@
 | Tests     | not configured (no test harness detected) | stable | 2026-03-02 |
 | Phase 1   | ✅ **IMPLEMENTATION COMPLETE** (schema, API, WebSocket, Redis design) | ✓ complete | 2026-03-02 Worker |
 | Backend   | 🟡 FRAMEWORK READY (FastAPI/Go scaffold + dependencies) | ✓ framework | Ready for Phase 2 |
-| Phase 2   | ⏳ IN PREPARATION (S-003 HOLE w:49, ready for next Worker) | waiting for implementation | Next |
+| Phase 2   | 🟡 READINESS COMPLETE (S-003 HOLE w:47, infrastructure scaffolding done) | ↗️ ready for Worker | 2026-03-02 Scout (Task 2.1) |
 
-## Signals (5 Active) — After Decay Cycle
+## Signals (5 Active) — After Metabolism Decay Cycle
 
 | ID | Type | Title | Weight | TTL | Status | Owner | Source |
 |----|------|-------|--------|-----|--------|-------|--------|
-| S-003 | HOLE | Phase 2: Backend Infrastructure (4-5 weeks, 7-task plan) | 49 | 30d | open | unassigned | scout-strategic |
-| S-002 | IMPLEMENT | Phase 1: COMPLETE ✓ (PostgreSQL schema, REST API, WebSocket, Redis) | 46 | 21d | completed | worker-phase1 | emergent |
-| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition | 32 | 21d | open | unassigned | scout-decision |
-| S-001 | EXPLORE | Map unknown project (decaying, archive when w≤20) | 27 | 14d | claimed | scout | autonomous |
-| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 22 | 21d | open | unassigned | scout-decision |
+| S-003 | HOLE | Phase 2: Backend Infrastructure (Docker, ORM, scaffolding ready) | 47 | 30d | open | unassigned | scout-readiness |
+| S-002 | IMPLEMENT | Phase 1: COMPLETE ✓ (PostgreSQL schema, REST API, WebSocket, Redis) | 44 | 21d | completed | worker-phase1 | emergent |
+| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition | 30 | 21d | open | unassigned | scout-decision |
+| S-001 | EXPLORE | Map unknown project (decaying, archive when w≤20) | 25 | 14d | claimed | scout | autonomous |
+| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support (at threshold) | 20 | 21d | open | unassigned | scout-decision |
 
 ## Emerged Rules
 
@@ -80,7 +80,9 @@
      - 7 key namespaces: sessions, cache, locks, rate limit, batch jobs, secondary index
      - Memory estimation, monitoring, eviction policy
 - **Phase 1 Framework**: PHASE_1.md (planning), backend/python/main.py, backend/go/main.go (code scaffold)
-- **Phase 2 Ready**: S-003 (w:49 HOLE) prepared with PHASE_2_PLAN.md (7-task breakdown)
+- **Phase 2 Readiness Complete** (2026-03-02 Scout): S-003 (w:47 HOLE) scaffolding done
+  - Task 2.1 deliverables: docker-compose.yml, Dockerfiles, .env.example, SQLAlchemy ORM models (9 models), agent_service package structure, LOGGING_STANDARDS.md
+  - Ready for Worker phase (Tasks 2.2-2.7): Database ORM implementation, FastAPI endpoints, WebSocket gateway, LangGraph router, Celery task queue, Docker deployment
 
 ## Known Limitations
 
