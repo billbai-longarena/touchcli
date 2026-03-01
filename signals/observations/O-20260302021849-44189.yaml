@@ -1,4 +1,4 @@
-# READ-ONLY — auto-exported from .termite.db (2026-03-01T19:11:33Z)
+# READ-ONLY — auto-exported from .termite.db (2026-03-01T19:27:23Z)
 # To modify observations, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: O-20260302021849-44189
 pattern: "S-005 gate check implemented: added latency threshold gate script for CI/local pass-fail"

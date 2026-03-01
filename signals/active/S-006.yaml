@@ -1,16 +1,19 @@
-# READ-ONLY — auto-exported from .termite.db (2026-03-01T19:11:33Z)
+# READ-ONLY — auto-exported from .termite.db (2026-03-01T19:27:23Z)
 # To modify signals, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: S-006
 type: HOLE
 title: "Implement locale fields + resolver in API/WebSocket middleware"
-status: completed
-weight: 22
+status: parked
+weight: 21
 ttl_days: 21
 created: 2026-03-01
 last_touched: 2026-03-01
-owner: worker-i18n
+owner: unassigned
 module: "backend/python/agent_service"
 tags: [i18n,locale,phase3]
-next: "S-006 implemented: locale resolver + migration + seed defaults"
-touch_count: 1
+next: "S-006 validated complete; remaining runtime dependency is local psycopg2 env setup"
+touch_count: 3
 source: scout-followup
+parked_reason: environment_boundary
+parked_conditions: "Touched 3x without resolution"
+parked_at: 2026-03-02
