@@ -16,7 +16,6 @@ export function Login() {
       return;
     }
 
-    // For demo: try to use UUID directly, or map email to known UUIDs
     const id = userId || mapEmailToUserId(emailInput);
     if (!id) {
       alert('User not found. Please use a valid UUID from the database.');
@@ -26,7 +25,7 @@ export function Login() {
     try {
       await login(id);
     } catch (err) {
-      // Error is handled and displayed via error state
+      // Error is handled and displayed
     }
   };
 
@@ -98,20 +97,11 @@ export function Login() {
   );
 }
 
-/**
- * Map demo email addresses to test user UUIDs
- * In production, this would be an actual authentication flow
- */
 function mapEmailToUserId(email: string): string | null {
-  // This is a placeholder - in a real app, the backend would handle this
-  // For now, users need to paste their UUID directly
   const demoUsers: Record<string, string> = {
-    'alice@test.local':
-      '550e8400-e29b-41d4-a716-446655440001', // Example UUID
-    'bob@test.local':
-      '550e8400-e29b-41d4-a716-446655440002',
-    'carol@test.local':
-      '550e8400-e29b-41d4-a716-446655440003',
+    'alice@test.local': '550e8400-e29b-41d4-a716-446655440001',
+    'bob@test.local': '550e8400-e29b-41d4-a716-446655440002',
+    'carol@test.local': '550e8400-e29b-41d4-a716-446655440003',
   };
 
   return demoUsers[email.toLowerCase()] || null;

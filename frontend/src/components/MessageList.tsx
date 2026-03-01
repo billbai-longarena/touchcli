@@ -4,7 +4,15 @@ import type { Message } from '../store/conversationStore';
 import '../styles/MessageList.css';
 
 export function MessageList() {
-  const { messages, currentConversation, fetchMessages, agentThinking, lastAgentAction, wsConnected } = useConversationStore();
+  const {
+    messages,
+    currentConversation,
+    fetchMessages,
+    agentThinking,
+    lastAgentAction,
+    wsConnected,
+    retryMessage,
+  } = useConversationStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -39,13 +47,44 @@ export function MessageList() {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`message ${isUserMessage(msg) ? 'user' : 'agent'}`}
+                className={`message ${isUserMessage(msg) ? 'user' : 'agent'} ${msg.status ? `status-${msg.status}` : ''}`}
               >
                 <div className="message-content">
                   <p>{msg.content}</p>
-                  <span className="timestamp">
-                    {new Date(msg.created_at).toLocaleTimeString()}
-                  </span>
+                  <div className="message-footer">
+                    <span className="timestamp">
+                      {new Date(msg.created_at).toLocaleTimeString()}
+                    </span>
+                    {msg.status === 'sending' && (
+                      <span className="status-badge sending" title="Sending...">
+                        ⏳
+                      </span>
+                    )}
+                    {msg.status === 'sent' && (
+                      <span className="status-badge sent" title="Sent">
+                        ✓
+                      </span>
+                    )}
+                    {msg.status === 'failed' && (
+                      <span className="status-badge failed" title={msg.error || 'Failed to send'}>
+                        ✗
+                      </span>
+                    )}
+                  </div>
+                  {msg.status === 'failed' && (
+                    <div className="error-retry">
+                      <p className="error-message">{msg.error}</p>
+                      <button
+                        className="retry-button"
+                        onClick={() =>
+                          currentConversation &&
+                          retryMessage(currentConversation.id, msg.id, msg.content)
+                        }
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

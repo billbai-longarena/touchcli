@@ -89,11 +89,81 @@
   margin-bottom: 0;
 }
 
+.message-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
 .message-content .timestamp {
-  display: block;
   font-size: 0.75rem;
   opacity: 0.6;
-  margin-top: 0.5rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  cursor: help;
+  opacity: 0.7;
+}
+
+.status-badge.sending {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-badge.sent {
+  color: #10b981;
+}
+
+.status-badge.failed {
+  color: #ef4444;
+  opacity: 1;
+}
+
+.error-retry {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: #fee2e2;
+  border-radius: 4px;
+  border-left: 3px solid #ef4444;
+}
+
+.error-message {
+  font-size: 0.75rem;
+  color: #991b1b;
+  margin: 0 0 0.5rem 0;
+}
+
+.retry-button {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.retry-button:hover {
+  background: #dc2626;
+}
+
+.retry-button:active {
+  transform: scale(0.98);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .message.user .message-content .timestamp {

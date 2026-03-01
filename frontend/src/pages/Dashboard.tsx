@@ -24,14 +24,14 @@ export function Dashboard() {
         <div className="welcome-card">
           <h2>Welcome to Phase 3! 🎉</h2>
           <p>
-            Task 3.1 (Project Setup & Authentication) is now complete!
+            Task 3.1 (Project Setup) and Task 3.2 (WebSocket Integration) are complete!
           </p>
 
           <div className="task-status">
             <h3>Phase 3 Tasks Status</h3>
             <ul className="task-list">
               <li className="task-done">✅ Task 3.1: Project Setup & Auth</li>
-              <li className="task-pending">⏳ Task 3.2: WebSocket Integration</li>
+              <li className="task-done">✅ Task 3.2: WebSocket Integration</li>
               <li className="task-pending">⏳ Task 3.3: Conversation UI</li>
               <li className="task-pending">⏳ Task 3.4: Real-time Streaming</li>
               <li className="task-pending">⏳ Task 3.5: Dashboard</li>
@@ -44,24 +44,12 @@ export function Dashboard() {
             <h3>Backend Status</h3>
             <p>
               Backend is ready at{' '}
-              <code>{import.meta.env.VITE_API_URL || 'http://localhost:8000'}</code>
+              <code>${import.meta.env.VITE_API_URL || 'http://localhost:8000'}</code>
             </p>
             <p>
               WebSocket available at{' '}
-              <code>{import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws'}</code>
+              <code>${import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws'}</code>
             </p>
-          </div>
-
-          <div className="success-message">
-            <h4>✓ Task 3.1 Completed Successfully!</h4>
-            <ul className="criteria-list">
-              <li>✅ React + TypeScript project running</li>
-              <li>✅ Login page created and functional</li>
-              <li>✅ JWT authentication integrated</li>
-              <li>✅ Protected routes implemented</li>
-              <li>✅ Auth state persisted (localStorage)</li>
-              <li>✅ Session auto-restored on page refresh</li>
-            </ul>
           </div>
         </div>
       </main>

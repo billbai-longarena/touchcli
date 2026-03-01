@@ -10,6 +10,8 @@ export interface Message {
   agent_id?: string;
   created_at: string;
   metadata?: Record<string, unknown>;
+  status?: 'sending' | 'sent' | 'failed'; // Optimistic update tracking
+  error?: string; // Error message if failed
 }
 
 export interface Conversation {
@@ -79,6 +81,7 @@ interface ConversationStore {
   fetchOpportunities: () => Promise<void>;
   createConversation: (customerId: string, title: string) => Promise<Conversation>;
   sendMessage: (conversationId: string, content: string) => Promise<Message>;
+  retryMessage: (conversationId: string, messageId: string, content: string) => Promise<Message>;
   subscribeToMessages: () => void;
   unsubscribeFromMessages: () => void;
 }
@@ -175,20 +178,108 @@ export const useConversationStore = create<ConversationStore>((set) => ({
   },
 
   sendMessage: async (conversationId: string, content: string) => {
-    set({ loading: true, error: null });
+    // Generate temporary ID for optimistic update
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+    // Create optimistic message
+    const optimisticMessage: Message = {
+      id: tempId,
+      conversation_id: conversationId,
+      user_id: useAuthStore.getState().user?.id || '',
+      content,
+      created_at: new Date().toISOString(),
+      status: 'sending',
+    };
+
+    // Add optimistic message to UI immediately
+    set((state) => ({
+      messages: [...state.messages, optimisticMessage],
+      loading: true,
+      error: null,
+    }));
+
     try {
       const response = await apiClient.post(`/conversations/${conversationId}/messages`, {
         content,
       });
       const newMessage = response.data;
+
+      // Replace optimistic message with confirmed message
       set((state) => ({
-        messages: [...state.messages, newMessage],
+        messages: state.messages.map((msg) =>
+          msg.id === tempId ? { ...newMessage, status: 'sent' } : msg
+        ),
         loading: false,
       }));
+
       return newMessage;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
-      set({ error: errorMessage, loading: false });
+
+      // Mark optimistic message as failed
+      set((state) => ({
+        messages: state.messages.map((msg) =>
+          msg.id === tempId
+            ? {
+                ...msg,
+                status: 'failed',
+                error: errorMessage,
+              }
+            : msg
+        ),
+        error: errorMessage,
+        loading: false,
+      }));
+
+      throw error;
+    }
+  },
+
+  retryMessage: async (conversationId: string, messageId: string, content: string) => {
+    // Reset failed message to sending state
+    set((state) => ({
+      messages: state.messages.map((msg) =>
+        msg.id === messageId
+          ? { ...msg, status: 'sending', error: undefined }
+          : msg
+      ),
+      loading: true,
+      error: null,
+    }));
+
+    try {
+      const response = await apiClient.post(`/conversations/${conversationId}/messages`, {
+        content,
+      });
+      const newMessage = response.data;
+
+      // Replace failed message with confirmed message
+      set((state) => ({
+        messages: state.messages.map((msg) =>
+          msg.id === messageId ? { ...newMessage, status: 'sent' } : msg
+        ),
+        loading: false,
+      }));
+
+      return newMessage;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+
+      // Mark as failed again
+      set((state) => ({
+        messages: state.messages.map((msg) =>
+          msg.id === messageId
+            ? {
+                ...msg,
+                status: 'failed',
+                error: errorMessage,
+              }
+            : msg
+        ),
+        error: errorMessage,
+        loading: false,
+      }));
+
       throw error;
     }
   },

@@ -6,21 +6,17 @@ const MAX_MESSAGE_LENGTH = 2000;
 
 export function MessageInput() {
   const [content, setContent] = useState('');
-  const [sending, setSending] = useState(false);
-  const { currentConversation, sendMessage, error } = useConversationStore();
+  const { currentConversation, sendMessage, error, loading } = useConversationStore();
 
   const handleSend = async (e: React.FormEvent | React.KeyboardEvent) => {
     e.preventDefault();
-    if (!content.trim() || !currentConversation || sending) return;
+    if (!content.trim() || !currentConversation || loading) return;
 
-    setSending(true);
     try {
       await sendMessage(currentConversation.id, content.trim());
       setContent('');
     } catch (err) {
       console.error('Failed to send message:', err);
-    } finally {
-      setSending(false);
     }
   };
 
@@ -43,7 +39,7 @@ export function MessageInput() {
           value={content}
           onChange={(e) => setContent(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
           placeholder="Type a message... (Ctrl+Enter to send)"
-          disabled={!currentConversation || sending}
+          disabled={!currentConversation || loading}
           onKeyDown={handleKeyDown}
           rows={3}
         />
@@ -53,10 +49,10 @@ export function MessageInput() {
           </span>
           <button
             type="submit"
-            disabled={!currentConversation || !content.trim() || sending || isOverLimit}
+            disabled={!currentConversation || !content.trim() || loading || isOverLimit}
             className="send-button"
           >
-            {sending ? (
+            {loading ? (
               <>
                 <span className="spinner" />
                 Sending...

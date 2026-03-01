@@ -1,196 +1,143 @@
 .dashboard-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background-color: #f9fafb;
+  height: 100vh;
+  background: #f5f5f5;
 }
 
 .dashboard-header {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 16px 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
-  max-width: 1280px;
-  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .dashboard-header h1 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 1.8rem;
   margin: 0;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 1.5rem;
 }
 
 .user-info {
-  font-size: 14px;
-  color: #6b7280;
+  font-size: 0.95rem;
 }
 
 .logout-button {
-  padding: 8px 16px;
-  background-color: #ef4444;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
   color: white;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .logout-button:hover {
-  background-color: #dc2626;
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .dashboard-main {
   flex: 1;
-  padding: 24px 20px;
-  max-width: 1280px;
-  width: 100%;
+  padding: 2rem;
+  overflow-y: auto;
+  max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .welcome-card {
   background: white;
   border-radius: 12px;
-  padding: 32px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .welcome-card h2 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 12px 0;
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
 }
 
 .welcome-card > p {
-  font-size: 16px;
-  color: #6b7280;
-  margin: 0 0 24px 0;
+  color: #666;
+  margin: 0 0 2rem 0;
 }
 
 .task-status {
-  margin: 24px 0;
-  padding: 20px;
-  background-color: #f3f4f6;
-  border-radius: 8px;
+  margin: 2rem 0;
 }
 
 .task-status h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  color: #333;
+  margin: 0 0 1rem 0;
 }
 
 .task-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  gap: 0.75rem;
 }
 
 .task-list li {
-  font-size: 14px;
-  color: #4b5563;
-  padding: 8px 0;
+  padding: 0.75rem;
+  background: #f5f5f5;
+  border-radius: 6px;
+  font-size: 0.95rem;
 }
 
-.task-done {
-  color: #059669;
-  font-weight: 600;
+.task-list .task-done {
+  background: #eafdf5;
+  color: #10b981;
 }
 
-.task-pending {
-  color: #6b7280;
+.task-list .task-pending {
+  background: #fef3c7;
+  color: #d97706;
 }
 
 .quick-info {
-  margin: 24px 0;
-  padding: 20px;
-  background-color: #dbeafe;
-  border-left: 4px solid #3b82f6;
-  border-radius: 8px;
+  margin: 2rem 0 0 0;
+  padding-top: 2rem;
+  border-top: 1px solid #eee;
 }
 
 .quick-info h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1e40af;
-  margin: 0 0 12px 0;
+  font-size: 1rem;
+  color: #333;
+  margin: 0 0 1rem 0;
 }
 
 .quick-info p {
-  font-size: 14px;
-  color: #1e3a8a;
-  margin: 8px 0;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
 }
 
 .quick-info code {
-  display: inline-block;
-  background-color: rgba(255, 255, 255, 0.6);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 13px;
-}
-
-.success-message {
-  margin-top: 24px;
-  padding: 20px;
-  background-color: #dcfce7;
-  border-left: 4px solid #22c55e;
-  border-radius: 8px;
-}
-
-.success-message h4 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #15803d;
-  margin: 0 0 12px 0;
-}
-
-.criteria-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.criteria-list li {
-  font-size: 14px;
-  color: #166534;
-}
-
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .welcome-card {
-    padding: 20px;
-  }
-
-  .welcome-card h2 {
-    font-size: 22px;
-  }
+  background: #f5f5f5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #667eea;
 }
