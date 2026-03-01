@@ -1,0 +1,636 @@
+openapi: 3.0.3
+info:
+  title: TouchCLI API
+  description: |
+    Pure conversation-based AI sales assistant API.
+    No GUI, only dialogue and voice.
+  version: 1.0.0
+  contact:
+    name: TouchCLI Team
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.touchcli.local/v1
+    description: Production
+  - url: http://localhost:8000/v1
+    description: Development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /conversations:
+    post:
+      summary: Start a new conversation
+      description: Initialize a conversation with optional context (customer, opportunity)
+      tags:
+        - Conversations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mode:
+                  type: string
+                  enum: [text, voice, hybrid]
+                  default: text
+                customer_id:
+                  type: string
+                  format: uuid
+                  description: Optional customer context
+                opportunity_id:
+                  type: string
+                  format: uuid
+                  description: Optional opportunity context
+                metadata:
+                  type: object
+                  description: Additional context data
+              required:
+                - mode
+      responses:
+        201:
+          description: Conversation created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  user_id:
+                    type: string
+                    format: uuid
+                  created_at:
+                    type: string
+                    format: date-time
+                  websocket_url:
+                    type: string
+                    description: WebSocket connection URL for real-time communication
+        400:
+          description: Invalid request
+        401:
+          description: Unauthorized
+
+    get:
+      summary: List conversations
+      tags:
+        - Conversations
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, completed, archived]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        200:
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conversation'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+  /conversations/{conversation_id}:
+    get:
+      summary: Get conversation details
+      tags:
+        - Conversations
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Conversation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationDetail'
+        404:
+          description: Conversation not found
+
+    patch:
+      summary: Update conversation (e.g., close, archive)
+      tags:
+        - Conversations
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, completed, archived]
+                title:
+                  type: string
+      responses:
+        200:
+          description: Conversation updated
+        404:
+          description: Conversation not found
+
+  /conversations/{conversation_id}/messages:
+    get:
+      summary: Get conversation messages (HTTP polling for non-WebSocket clients)
+      tags:
+        - Messages
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: since:
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Get messages created after this timestamp
+        - name: limit:
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        200:
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+
+  /customers:
+    post:
+      summary: Create a customer
+      tags:
+        - Customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreate'
+      responses:
+        201:
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+    get:
+      summary: List customers
+      tags:
+        - Customers
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Full-text search by name, email, phone
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [individual, company]
+        - name: assigned_to
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Customer'
+                  total:
+                    type: integer
+
+  /customers/{customer_id}:
+    get:
+      summary: Get customer details
+      tags:
+        - Customers
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Customer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDetail'
+
+    patch:
+      summary: Update customer
+      tags:
+        - Customers
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdate'
+      responses:
+        200:
+          description: Customer updated
+
+  /opportunities:
+    post:
+      summary: Create an opportunity
+      tags:
+        - Opportunities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpportunityCreate'
+      responses:
+        201:
+          description: Opportunity created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Opportunity'
+
+    get:
+      summary: List opportunities
+      tags:
+        - Opportunities
+      parameters:
+        - name: customer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: owner_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [lead, qualified, proposal, negotiation, won, lost, on_hold]
+      responses:
+        200:
+          description: List of opportunities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Opportunity'
+                  total:
+                    type: integer
+
+  /opportunities/{opportunity_id}:
+    patch:
+      summary: Update opportunity status or details
+      tags:
+        - Opportunities
+      parameters:
+        - name: opportunity_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpportunityUpdate'
+      responses:
+        200:
+          description: Opportunity updated
+
+  /health:
+    get:
+      summary: Health check
+      security: []  # No auth required
+      tags:
+        - System
+      responses:
+        200:
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded]
+                  version:
+                    type: string
+                  database:
+                    type: string
+                    enum: [connected, disconnected]
+                  redis:
+                    type: string
+                    enum: [connected, disconnected]
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        OAuth 2.0 access token (JWT format).
+        Obtain via /auth/token endpoint.
+
+  schemas:
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+          nullable: true
+        opportunity_id:
+          type: string
+          format: uuid
+          nullable: true
+        mode:
+          type: string
+          enum: [text, voice, hybrid]
+        status:
+          type: string
+          enum: [active, completed, archived]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ConversationDetail:
+      allOf:
+        - $ref: '#/components/schemas/Conversation'
+        - type: object
+          properties:
+            message_count:
+              type: integer
+            last_message:
+              $ref: '#/components/schemas/Message'
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversation_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [user, agent, system]
+        agent_name:
+          type: string
+          nullable: true
+        content:
+          type: string
+        action_type:
+          type: string
+          nullable: true
+        action_status:
+          type: string
+          enum: [pending, executing, completed, failed]
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [individual, company]
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        assigned_to:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+
+    CustomerCreate:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [individual, company]
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        company_size:
+          type: string
+        industry:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    CustomerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        assigned_to:
+          type: string
+          format: uuid
+
+    CustomerDetail:
+      allOf:
+        - $ref: '#/components/schemas/Customer'
+        - type: object
+          properties:
+            opportunities:
+              type: array
+              items:
+                $ref: '#/components/schemas/Opportunity'
+            conversation_history:
+              type: array
+              items:
+                type: string
+                format: uuid
+
+    Opportunity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        customer_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [lead, qualified, proposal, negotiation, won, lost, on_hold]
+        probability:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        expected_close_date:
+          type: string
+          format: date
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    OpportunityCreate:
+      type: object
+      required:
+        - name
+        - customer_id
+        - status
+      properties:
+        name:
+          type: string
+        customer_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [lead, qualified, proposal, negotiation, won, lost, on_hold]
+        probability:
+          type: number
+          minimum: 0
+          maximum: 1
+        expected_close_date:
+          type: string
+          format: date
+
+    OpportunityUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+          enum: [lead, qualified, proposal, negotiation, won, lost, on_hold]
+        amount:
+          type: number
+          format: decimal
+        probability:
+          type: number
+          minimum: 0
+          maximum: 1
+        expected_close_date:
+          type: string
+          format: date
+        notes:
+          type: string
