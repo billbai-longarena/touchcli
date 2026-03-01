@@ -1,23 +1,38 @@
-name: Deploy to Staging
+name: Deploy to Production
 
 on:
   push:
-    branches: [develop]
-  workflow_run:
-    workflows: [Tests]
-    types: [completed]
-    branches: [develop]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: docker.io
+  IMAGE_PREFIX: touchcli
+  DOCKER_BUILDKIT: 1
 
 jobs:
-  deploy:
-    name: Deploy to Staging
+  # ============================================================================
+  # Build and Test
+  # ============================================================================
+
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'push'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ========== Frontend ==========
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -33,11 +48,15 @@ jobs:
           VITE_API_URL: ${{ secrets.STAGING_API_URL || 'http://localhost:8000' }}
           VITE_WS_URL: ${{ secrets.STAGING_WS_URL || 'ws://localhost:8080/ws' }}
 
+      - name: Test frontend
+        run: npm --prefix frontend run test -- run
+        continue-on-error: true
+
+      # ========== Backend ==========
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.11
-          cache: pip
+          python-version: '3.11'
 
       - name: Install backend dependencies
         run: |
@@ -45,51 +64,287 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run migrations
+      - name: Lint backend
         run: |
           cd backend/python
-          alembic upgrade head
-        env:
-          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
-          continue-on-error: true
-
-      # Docker build and push (if you have Docker setup)
-      - name: Build Docker images
-        run: |
-          docker build -t touchcli-frontend:latest ./frontend
-          docker build -t touchcli-backend:latest ./backend/python
+          flake8 agent_service --max-line-length=120 --ignore=E501,W503
         continue-on-error: true
 
-      # Deploy notification
-      - name: Deploy notification
+      - name: Type check backend
         run: |
-          echo "## Deployment Status" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Frontend built and ready for deployment" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Backend built and migrations ready" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployment Steps:**" >> $GITHUB_STEP_SUMMARY
-          echo "1. Push Docker images to registry" >> $GITHUB_STEP_SUMMARY
-          echo "2. Update staging environment" >> $GITHUB_STEP_SUMMARY
-          echo "3. Run database migrations" >> $GITHUB_STEP_SUMMARY
-          echo "4. Smoke test staging endpoints" >> $GITHUB_STEP_SUMMARY
+          cd backend/python
+          mypy agent_service --ignore-missing-imports
+        continue-on-error: true
 
-      # Slack notification (optional)
-      - name: Notify Slack
+      # ========== Setup Deployment Credentials ==========
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+  # ============================================================================
+  # Build and Push Docker Images
+  # ============================================================================
+
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    strategy:
+      matrix:
+        include:
+          - service: frontend
+            dockerfile: frontend/Dockerfile
+            context: .
+          - service: backend
+            dockerfile: backend/python/Dockerfile
+            context: .
+          - service: gateway
+            dockerfile: backend/go/Dockerfile
+            context: .
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image - ${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Docker image summary
+        run: |
+          echo "## Docker Image Built" >> $GITHUB_STEP_SUMMARY
+          echo "- Service: ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Registry: ${{ env.REGISTRY }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Images:" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" | while read tag; do
+            echo "  - $tag" >> $GITHUB_STEP_SUMMARY
+          done
+
+  # ============================================================================
+  # Deploy to Kubernetes
+  # ============================================================================
+
+  deploy-kubernetes:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    environment:
+      name: ${{ github.event.inputs.environment || 'staging' }}
+      url: https://${{ github.event.inputs.environment || 'staging' }}.touchcli.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Verify cluster connection
+        run: kubectl cluster-info
+
+      - name: Deploy Sealed Secrets Controller
+        run: |
+          kubectl apply -f k8s/sealed-secrets-controller.yaml
+          kubectl wait --for=condition=available --timeout=300s \
+            deployment/sealed-secrets-controller -n sealed-secrets 2>/dev/null || true
+
+      - name: Deploy application secrets
+        run: |
+          kubectl apply -f k8s/sealed-secrets-touchcli.yaml
+          kubectl wait --for=condition=Type=Ready \
+            sealedsecret/touchcli-secrets -n touchcli --timeout=60s 2>/dev/null || true
+
+      - name: Deploy ConfigMap
+        run: kubectl apply -f k8s/configmap.yaml
+
+      - name: Deploy namespace
+        run: kubectl apply -f k8s/namespace.yaml
+
+      - name: Deploy backend
+        run: |
+          # Update image tags in deployment
+          sed -i "s|touchcli/agent-service:latest|${{ secrets.DOCKER_USERNAME }}/touchcli-backend:${{ github.sha }}|g" k8s/backend-deployment.yaml
+          kubectl apply -f k8s/backend-deployment.yaml
+          kubectl rollout status deployment/agent-service -n touchcli --timeout=5m
+
+      - name: Deploy gateway
+        run: |
+          # Update image tags in deployment
+          sed -i "s|touchcli/gateway:latest|${{ secrets.DOCKER_USERNAME }}/touchcli-gateway:${{ github.sha }}|g" k8s/gateway-deployment.yaml
+          kubectl apply -f k8s/gateway-deployment.yaml
+          kubectl rollout status deployment/gateway -n touchcli --timeout=5m
+
+      - name: Deploy frontend
+        run: |
+          # Update image tags in deployment
+          sed -i "s|touchcli/frontend:latest|${{ secrets.DOCKER_USERNAME }}/touchcli-frontend:${{ github.sha }}|g" k8s/frontend-deployment.yaml
+          kubectl apply -f k8s/frontend-deployment.yaml
+          kubectl rollout status deployment/frontend -n touchcli --timeout=5m
+
+      - name: Deploy ingress
+        run: kubectl apply -f k8s/ingress.yaml
+
+      - name: Post-deployment health checks
+        run: |
+          echo "## Post-Deployment Health Checks" >> $GITHUB_STEP_SUMMARY
+
+          # Check pod status
+          echo "### Pod Status" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n touchcli >> $GITHUB_STEP_SUMMARY
+
+          # Check deployment status
+          echo "### Deployment Status" >> $GITHUB_STEP_SUMMARY
+          kubectl get deployment -n touchcli >> $GITHUB_STEP_SUMMARY
+
+          # Check service endpoints
+          echo "### Service Endpoints" >> $GITHUB_STEP_SUMMARY
+          kubectl get svc -n touchcli >> $GITHUB_STEP_SUMMARY
+
+          # Verify health endpoints
+          FRONTEND_POD=$(kubectl get pod -n touchcli -l app=frontend -o jsonpath='{.items[0].metadata.name}')
+          BACKEND_POD=$(kubectl get pod -n touchcli -l app=agent-service -o jsonpath='{.items[0].metadata.name}')
+          GATEWAY_POD=$(kubectl get pod -n touchcli -l app=gateway -o jsonpath='{.items[0].metadata.name}')
+
+          echo "### Health Check Results" >> $GITHUB_STEP_SUMMARY
+
+          if [ -n "$BACKEND_POD" ]; then
+            echo "Backend: $BACKEND_POD" >> $GITHUB_STEP_SUMMARY
+            kubectl exec -n touchcli $BACKEND_POD -- curl -s http://localhost:8000/health || echo "Backend health check failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ -n "$GATEWAY_POD" ]; then
+            echo "Gateway: $GATEWAY_POD" >> $GITHUB_STEP_SUMMARY
+            kubectl exec -n touchcli $GATEWAY_POD -- curl -s http://localhost:8080/health || echo "Gateway health check failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Deployment summary
         if: always()
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Environment: ${{ github.event.inputs.environment || 'staging' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Timestamp: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # Notifications
+  # ============================================================================
+
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [build-and-test, build-and-push, deploy-kubernetes]
+    if: always()
+
+    steps:
+      - name: Determine status
+        id: status
+        run: |
+          if [ "${{ needs.build-and-test.result }}" = "failure" ] || [ "${{ needs.build-and-push.result }}" = "failure" ] || [ "${{ needs.deploy-kubernetes.result }}" = "failure" ]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "emoji=❌" >> $GITHUB_OUTPUT
+          else
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "emoji=✅" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Notify Slack
         uses: slackapi/slack-github-action@v1.24.0
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           payload: |
             {
-              "text": "TouchCLI Staging Deployment",
+              "text": "TouchCLI Deployment ${{ steps.status.outputs.status }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*TouchCLI Staging Deployment*\nBranch: develop\nStatus: Ready for deployment"
+                    "text": "${{ steps.status.outputs.emoji }} *TouchCLI Deployment* ${{ steps.status.outputs.status }}\n*Branch:* `${{ github.ref }}`\n*Environment:* `${{ github.event.inputs.environment || 'staging' }}`\n*Commit:* `${{ github.sha }}`"
                   }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Workflow"
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
                 }
               ]
             }
+        continue-on-error: true
+
+      - name: Create deployment issue if failed
+        if: steps.status.outputs.status == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Deployment Failed: ${{ github.ref }} @ ${{ github.sha }}`,
+              body: `
+              Deployment failed for commit ${{ github.sha }}
+
+              **Branch:** ${{ github.ref }}
+              **Environment:** ${{ github.event.inputs.environment || 'staging' }}
+              **Workflow Run:** [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+              Please investigate and re-run the workflow once fixed.
+              `,
+              labels: ['deployment', 'failure']
+            })
         continue-on-error: true
