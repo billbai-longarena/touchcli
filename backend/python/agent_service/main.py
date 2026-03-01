@@ -176,24 +176,43 @@ async def health_check(db: Session = Depends(get_db)):
         - checks: database, agent_service, cache status
     """
     import time
+    import redis as redis_client
 
-    db_health = await get_db_health()
-
-    # Check cache (Redis) - for now simplified
-    redis_ok = True
+    # Check database connectivity
+    db_status = "ok"
+    db_latency = 0
+    db_error = None
     try:
-        # TODO: Implement actual Redis health check when Redis is available
-        pass
+        start = time.time()
+        db.execute("SELECT 1")
+        db_latency = int((time.time() - start) * 1000)
     except Exception as e:
-        logger.error(f"Redis health check failed: {e}")
+        db_status = "error"
+        db_error = str(e)
+        logger.error(f"Database health check failed: {e}")
+
+    # Check Redis connectivity
+    redis_ok = True
+    redis_latency = 0
+    redis_error = None
+    try:
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        # Extract Redis connection parameters from URL
+        redis_connection = redis_client.from_url(redis_url, decode_responses=True)
+
+        start = time.time()
+        redis_connection.ping()
+        redis_latency = int((time.time() - start) * 1000)
+        redis_connection.close()
+    except Exception as e:
         redis_ok = False
+        redis_error = str(e)
+        logger.warning(f"Redis health check failed: {e} (Redis may be unavailable)")
 
     # Determine overall status
     overall_status = "ok"
-    if db_health["status"] == "error" or not redis_ok:
+    if db_status == "error" or (not redis_ok):
         overall_status = "unhealthy"
-    elif db_health["status"] == "degraded":
-        overall_status = "degraded"
 
     return HealthCheckResponse(
         status=overall_status,
@@ -201,9 +220,9 @@ async def health_check(db: Session = Depends(get_db)):
         version="1.0.0",
         checks={
             "database": ComponentHealth(
-                status=db_health["status"],
-                latency_ms=db_health.get("latency_ms"),
-                last_checked=datetime.fromisoformat(db_health["last_checked"].replace("Z", "+00:00"))
+                status=db_status,
+                latency_ms=db_latency,
+                last_checked=datetime.utcnow()
             ),
             "agent_service": ComponentHealth(
                 status="ok",
@@ -212,7 +231,7 @@ async def health_check(db: Session = Depends(get_db)):
             ),
             "cache": ComponentHealth(
                 status="ok" if redis_ok else "error",
-                latency_ms=None,
+                latency_ms=redis_latency if redis_ok else None,
                 last_checked=datetime.utcnow()
             )
         }
