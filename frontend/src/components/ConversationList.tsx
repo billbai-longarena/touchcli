@@ -1,20 +1,25 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useConversationStore } from '../store/conversationStore';
+import { CreateConversationModal } from './CreateConversationModal';
 import '../styles/ConversationList.css';
 
 export function ConversationList() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const {
     conversations,
     currentConversation,
     setCurrentConversation,
     fetchConversations,
+    fetchCustomers,
     subscribeToMessages,
     unsubscribeFromMessages,
   } = useConversationStore();
 
   useEffect(() => {
     fetchConversations();
-  }, [fetchConversations]);
+    fetchCustomers();
+  }, [fetchConversations, fetchCustomers]);
 
   useEffect(() => {
     // Subscribe to WebSocket messages when conversation is selected
@@ -27,13 +32,22 @@ export function ConversationList() {
   }, [currentConversation, subscribeToMessages, unsubscribeFromMessages]);
 
   return (
-    <div className="conversation-list">
-      <div className="list-header">
-        <h2>Conversations</h2>
-        <button className="new-conversation-btn" title="Create new conversation">
-          +
-        </button>
-      </div>
+    <>
+      <CreateConversationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+      <div className="conversation-list">
+        <div className="list-header">
+          <h2>Conversations</h2>
+          <button
+            className="new-conversation-btn"
+            title="Create new conversation"
+            onClick={() => setIsModalOpen(true)}
+          >
+            +
+          </button>
+        </div>
       {conversations.length === 0 ? (
         <p className="empty">No conversations yet. Create one to get started.</p>
       ) : (
@@ -60,6 +74,7 @@ export function ConversationList() {
           ))}
         </ul>
       )}
-    </div>
+      </div>
+    </>
   );
 }
