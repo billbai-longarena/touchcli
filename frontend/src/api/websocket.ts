@@ -14,7 +14,7 @@ export class WebSocketClient {
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private token: string | null = null;
 
-  constructor(url?: string) {
+  constructor() {
     const baseUrl = import.meta.env.VITE_WS_URL;
     if (baseUrl) {
       this.url = baseUrl;

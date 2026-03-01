@@ -15,7 +15,6 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
 
-  // Actions
   setUser: (user: User) => void;
   setToken: (token: string) => void;
   login: (userId: string) => Promise<void>;
