@@ -1,0 +1,95 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_run:
+    workflows: [Tests]
+    types: [completed]
+    branches: [develop]
+
+jobs:
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm --prefix frontend install
+
+      - name: Build frontend
+        run: npm --prefix frontend run build
+        env:
+          VITE_API_URL: ${{ secrets.STAGING_API_URL || 'http://localhost:8000' }}
+          VITE_WS_URL: ${{ secrets.STAGING_WS_URL || 'ws://localhost:8080/ws' }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+          cache: pip
+
+      - name: Install backend dependencies
+        run: |
+          cd backend/python
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run migrations
+        run: |
+          cd backend/python
+          alembic upgrade head
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          continue-on-error: true
+
+      # Docker build and push (if you have Docker setup)
+      - name: Build Docker images
+        run: |
+          docker build -t touchcli-frontend:latest ./frontend
+          docker build -t touchcli-backend:latest ./backend/python
+        continue-on-error: true
+
+      # Deploy notification
+      - name: Deploy notification
+        run: |
+          echo "## Deployment Status" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Frontend built and ready for deployment" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Backend built and migrations ready" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Push Docker images to registry" >> $GITHUB_STEP_SUMMARY
+          echo "2. Update staging environment" >> $GITHUB_STEP_SUMMARY
+          echo "3. Run database migrations" >> $GITHUB_STEP_SUMMARY
+          echo "4. Smoke test staging endpoints" >> $GITHUB_STEP_SUMMARY
+
+      # Slack notification (optional)
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "TouchCLI Staging Deployment",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*TouchCLI Staging Deployment*\nBranch: develop\nStatus: Ready for deployment"
+                  }
+                }
+              ]
+            }
+        continue-on-error: true

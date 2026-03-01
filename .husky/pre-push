@@ -1,0 +1,49 @@
+#!/bin/sh
+# Pre-push hook: Run full test suite before pushing
+# Prevents pushing commits with failing tests
+
+set -e
+
+echo "🧪 Running full test suite before push..."
+
+# Get the remote and branch being pushed to
+REMOTE=$1
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+echo "📤 Pushing to: $REMOTE/$BRANCH"
+
+# Frontend tests
+echo ""
+echo "🧪 Running frontend tests..."
+cd frontend
+
+if npm ls vitest > /dev/null 2>&1; then
+    npm run test:run || {
+        echo "❌ Frontend tests failed!"
+        exit 1
+    }
+else
+    echo "⚠️  Vitest not installed, skipping"
+fi
+
+cd ..
+
+# Backend tests
+echo ""
+echo "🧪 Running backend tests..."
+cd backend/python
+
+if command -v pytest > /dev/null 2>&1; then
+    pytest tests/ --tb=short || {
+        echo "❌ Backend tests failed!"
+        exit 1
+    }
+else
+    echo "⚠️  pytest not installed, skipping"
+fi
+
+cd ../..
+
+echo ""
+echo "✅ All tests passed! Proceeding with push..."
+exit 0

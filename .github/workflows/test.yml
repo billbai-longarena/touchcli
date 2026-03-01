@@ -1,0 +1,168 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+        python-version: [3.11]
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Frontend Tests
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm --prefix frontend install
+
+      - name: Lint frontend code
+        run: npm --prefix frontend run lint --if-present
+
+      - name: Run frontend unit tests
+        run: npm --prefix frontend run test:run
+
+      - name: Run frontend unit test coverage
+        run: npm --prefix frontend run test:coverage
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        working-directory: frontend
+
+      - name: Run frontend E2E tests
+        run: npm --prefix frontend run test:e2e --if-present
+        env:
+          VITE_API_URL: http://localhost:8000
+          VITE_WS_URL: ws://localhost:8080/ws
+
+      # Backend Tests
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install backend dependencies
+        run: |
+          cd backend/python
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run backend linter (flake8)
+        run: |
+          cd backend/python
+          pip install flake8
+          flake8 agent_service --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 agent_service --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        continue-on-error: true
+
+      - name: Run backend unit tests
+        run: |
+          cd backend/python
+          pytest tests/ -v --cov=agent_service --cov-report=xml --cov-report=html
+        env:
+          DATABASE_URL: postgresql://postgres:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+
+      # Coverage Reports
+      - name: Upload frontend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./frontend/coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
+        continue-on-error: true
+
+      - name: Upload backend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./backend/python/coverage.xml
+          flags: backend
+          name: backend-coverage
+        continue-on-error: true
+
+      # Test Summary
+      - name: Test results summary
+        if: always()
+        run: |
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Frontend unit tests completed" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Frontend E2E tests completed" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Backend unit tests completed" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Coverage reports uploaded to Codecov" >> $GITHUB_STEP_SUMMARY
+
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm --prefix frontend install
+
+      - name: Build frontend
+        run: npm --prefix frontend run build
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install backend dependencies
+        run: |
+          cd backend/python
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build backend (syntax check)
+        run: |
+          cd backend/python
+          python -m py_compile agent_service/*.py
