@@ -81,13 +81,19 @@
 }
 
 .message-content p {
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.5rem 0;
   line-height: 1.4;
 }
 
+.message-content p:last-child {
+  margin-bottom: 0;
+}
+
 .message-content .timestamp {
+  display: block;
   font-size: 0.75rem;
   opacity: 0.6;
+  margin-top: 0.5rem;
 }
 
 .message.user .message-content .timestamp {

@@ -1,61 +1,127 @@
 .conversation-list {
-  padding: 1rem;
+  padding: 1rem 0;
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: #fafafa;
+  border-right: 1px solid #e5e7eb;
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  margin-bottom: 1rem;
 }
 
 .conversation-list h2 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #333;
-  margin-bottom: 1rem;
+  color: #1f2937;
+  margin: 0;
+}
+
+.new-conversation-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #667eea;
+  color: white;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.new-conversation-btn:hover {
+  background: #5568d3;
+  transform: scale(1.05);
 }
 
 .conversation-list ul {
   list-style: none;
   flex: 1;
   overflow-y: auto;
-  padding-right: 0.5rem;
-}
-
-.conversation-list li {
-  cursor: pointer;
-  margin-bottom: 0.5rem;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.conversation-list li:hover {
-  background: #e8e8e8;
-}
-
-.conversation-list li.active {
-  background: #667eea;
-  color: white;
+  padding: 0;
+  margin: 0;
 }
 
 .conversation-item {
-  padding: 0.75rem;
+  cursor: pointer;
+  padding: 1rem;
+  margin-bottom: 0;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  background: white;
+  margin-bottom: 1px;
+}
+
+.conversation-item:hover {
+  background: #f3f4f6;
+}
+
+.conversation-item.active {
+  background: #f0f4ff;
+  border-left-color: #667eea;
+}
+
+.item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .conversation-item h3 {
   font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.conversation-item.active h3 {
+  color: #667eea;
+}
+
+.item-content .meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.item-content .status {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #e0e7ff;
+  color: #4338ca;
+  border-radius: 3px;
   font-weight: 500;
-  margin-bottom: 0.25rem;
+  text-transform: capitalize;
 }
 
-.conversation-item p {
-  font-size: 0.8rem;
-  opacity: 0.7;
+.item-content .date {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
-.conversation-list li.active p {
-  opacity: 0.9;
+.conversation-item.active .item-content .status {
+  background: #c7d2fe;
+  color: #4338ca;
 }
 
 .empty {
-  color: #999;
+  color: #6b7280;
   text-align: center;
   padding: 2rem 1rem;
   font-size: 0.9rem;
