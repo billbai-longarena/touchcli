@@ -296,7 +296,11 @@ list_signals_by_weight() {
   local tmpfile
   tmpfile=$(mktemp)
   while IFS= read -r f; do
-    local w
+    local w s
+    s=$(yaml_read "$f" "status")
+    case "$s" in
+      archived|parked|completed|done) continue ;;
+    esac
     w=$(yaml_read "$f" "weight")
     [ -n "$w" ] && echo "$w $f"
   done < <(list_active_signals) | sort -rn > "$tmpfile"
@@ -305,14 +309,28 @@ list_signals_by_weight() {
 }
 
 count_active_signals() {
-  list_active_signals | wc -l | tr -d ' '
+  local count=0
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    local s
+    s=$(yaml_read "$f" "status")
+    case "$s" in
+      archived|parked|completed|done) continue ;;
+      *) count=$((count + 1)) ;;
+    esac
+  done < <(list_active_signals)
+  echo "$count"
 }
 
 count_high_weight_holes() {
   # Count HOLE signals with weight >= escalate_threshold
   local count=0
   while IFS= read -r f; do
-    local t w
+    local t w s
+    s=$(yaml_read "$f" "status")
+    case "$s" in
+      archived|parked|completed|done) continue ;;
+    esac
     t=$(yaml_read "$f" "type")
     w=$(yaml_read "$f" "weight")
     if [ "$t" = "HOLE" ] && [ "${w:-0}" -ge "$ESCALATE_THRESHOLD" ]; then
@@ -338,7 +356,10 @@ count_high_weight_holes_excluding_parked() {
     [ -f "$f" ] || continue
     local t w s
     t=$(yaml_read "$f" "type"); w=$(yaml_read "$f" "weight"); s=$(yaml_read "$f" "status")
-    if [ "$t" = "HOLE" ] && [ "${w:-0}" -ge "$ESCALATE_THRESHOLD" ] && [ "$s" != "parked" ]; then
+    case "$s" in
+      archived|parked|completed|done) continue ;;
+    esac
+    if [ "$t" = "HOLE" ] && [ "${w:-0}" -ge "$ESCALATE_THRESHOLD" ]; then
       count=$((count + 1))
     fi
   done < <(list_active_signals)

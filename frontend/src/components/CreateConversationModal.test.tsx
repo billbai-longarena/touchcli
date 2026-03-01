@@ -61,7 +61,7 @@ describe('CreateConversationModal', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      const errorElement = screen.getByText((content, element) => {
+      const errorElement = screen.getByText((_content, element) => {
         return element?.className === 'modal-error';
       });
       expect(errorElement).toBeInTheDocument();

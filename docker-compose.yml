@@ -96,6 +96,29 @@ services:
       timeout: 5s
       retries: 5
 
+  # React Frontend (SPA)
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: touchcli_frontend
+    environment:
+      API_URL: http://gateway:8080
+      VITE_API_URL: http://gateway:8080
+      VITE_WS_URL: ws://localhost:8080/ws
+    ports:
+      - "3000:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - touchcli_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   redis_data:

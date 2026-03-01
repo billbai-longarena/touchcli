@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { OpportunitiesPage } from './OpportunitiesPage';
 
@@ -149,8 +148,8 @@ describe('OpportunitiesPage', () => {
   it('should show stage badge with color', () => {
     renderWithRouter(<OpportunitiesPage />);
 
-    const stageBadges = screen.getAllByText((content, element) => {
-      return element?.className?.includes('stage-badge');
+    const stageBadges = screen.getAllByText((_content, element) => {
+      return element?.className?.includes('stage-badge') ?? false;
     });
     expect(stageBadges.length).toBeGreaterThan(0);
   });

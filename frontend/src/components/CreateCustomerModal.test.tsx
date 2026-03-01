@@ -52,7 +52,7 @@ describe('CreateCustomerModal', () => {
     fireEvent.click(submitBtn);
 
     // Error element should be displayed
-    const errorElement = screen.getByText((content, element) => {
+    const errorElement = screen.getByText((_content, element) => {
       return element?.className === 'modal-error';
     });
     expect(errorElement).toBeInTheDocument();
@@ -71,11 +71,10 @@ describe('CreateCustomerModal', () => {
     const submitBtn = screen.getByRole('button', { name: /create customer/i });
     fireEvent.click(submitBtn);
 
-    // Error element should be displayed
-    const errorElement = screen.queryByText((content, element) => {
-      return element?.className === 'modal-error' && content.includes('valid');
+    // Error element should be displayed (validation may happen on blur or submit)
+    screen.queryByText((_content, element) => {
+      return element?.className === 'modal-error';
     });
-    // Accept that validation may happen on blur or submit
   });
 
   it('should enable submit button when required fields are filled', async () => {

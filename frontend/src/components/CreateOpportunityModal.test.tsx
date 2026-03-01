@@ -64,7 +64,7 @@ describe('CreateOpportunityModal', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      const errorElement = screen.getByText((content, element) => {
+      const errorElement = screen.getByText((_content, element) => {
         return element?.className === 'modal-error';
       });
       expect(errorElement).toBeInTheDocument();
@@ -87,8 +87,8 @@ describe('CreateOpportunityModal', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      const errorElement = screen.queryByText((content, element) => {
-        return element?.className === 'modal-error' && content.includes('valid');
+      screen.queryByText((_content, element) => {
+        return element?.className === 'modal-error';
       });
       // Error should be shown for invalid amount
     });

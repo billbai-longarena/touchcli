@@ -1,0 +1,62 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Package managers
+node_modules/
+npm-debug.log
+npm-error.log
+yarn-error.log
+yarn-debug.log
+
+# Build output
+dist/
+build/
+coverage/
+
+# Development files
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+tests/
+__tests__/
+
+# Documentation
+*.md
+docs/
+README*
+
+# Misc
+.husky/
+.prettierignore
+.eslintignore
+.eslintrc*
+tsconfig*
+vite.config.ts
+vitest.config.ts
+playwright.config.ts
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Node package lock files (we use npm ci in Docker)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
