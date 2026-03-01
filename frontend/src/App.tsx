@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+import { CustomersPage } from './pages/CustomersPage';
+import { OpportunitiesPage } from './pages/OpportunitiesPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAuthStore } from './store/authStore';
 import { useAuth } from './hooks/useAuth';
@@ -45,6 +47,34 @@ function ConversationApp() {
   );
 }
 
+function MainLayout({ children }: { children: React.ReactNode }) {
+  const { user, logout } = useAuth();
+
+  return (
+    <div className="app">
+      <header className="app-header">
+        <div className="header-left">
+          <h1>TouchCLI</h1>
+          <p className="subtitle">Sales Assistant</p>
+        </div>
+        <div className="header-right">
+          {user && (
+            <>
+              <span className="user-name">{user.name || user.id}</span>
+              <button className="logout-btn" onClick={logout}>
+                Logout
+              </button>
+            </>
+          )}
+        </div>
+      </header>
+      <div className="layout-container">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function AppContent() {
   useEffect(() => {
     // Restore session from localStorage on app mount
@@ -75,6 +105,34 @@ function AppContent() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/conversations"
+        element={
+          <ProtectedRoute>
+            <ConversationApp />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/customers"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <CustomersPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/opportunities"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <OpportunitiesPage />
+            </MainLayout>
           </ProtectedRoute>
         }
       />

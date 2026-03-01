@@ -83,6 +83,11 @@ body {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
+.layout-container {
+  flex: 1;
+  overflow: hidden;
+}
+
 .app-container {
   display: flex;
   flex: 1;

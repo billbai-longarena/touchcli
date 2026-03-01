@@ -1,10 +1,10 @@
-# READ-ONLY — auto-exported from .termite.db (2026-03-01T18:55:40Z)
+# READ-ONLY — auto-exported from .termite.db (2026-03-01T19:00:02Z)
 # To modify signals, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: S-004
 type: PROBE
 title: "EXPLORE: Internationalization & Multi-language Support Architecture"
 status: completed
-weight: 6
+weight: 5
 ttl_days: 21
 created: 2026-03-02T01:30:00Z
 last_touched: 2026-03-01
