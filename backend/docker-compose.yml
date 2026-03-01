@@ -1,0 +1,154 @@
+version: '3.9'
+
+services:
+  # ========================================================================
+  # PostgreSQL Database
+  # ========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: touchcli-postgres
+    environment:
+      POSTGRES_USER: touchcli_user
+      POSTGRES_PASSWORD: touchcli_password
+      POSTGRES_DB: touchcli
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U touchcli_user -d touchcli"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - touchcli_network
+
+  # ========================================================================
+  # Redis Cache & Message Queue
+  # ========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: touchcli-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - touchcli_network
+
+  # ========================================================================
+  # Python FastAPI Agent Service
+  # ========================================================================
+  agent-service:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    container_name: touchcli-agent-service
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://touchcli_user:touchcli_password@postgres:5432/touchcli
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - AGENT_SERVICE_PORT=8000
+      - LOG_LEVEL=INFO
+      - DEBUG_MODE=true
+      - ALLOW_CORS=true
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./python:/app  # Mount for development hot-reload (requires uvicorn reload)
+    networks:
+      - touchcli_network
+    restart: unless-stopped
+
+  # ========================================================================
+  # Go Gateway (WebSocket + HTTP Proxy)
+  # ========================================================================
+  gateway:
+    build:
+      context: ./go
+      dockerfile: Dockerfile
+    container_name: touchcli-gateway
+    environment:
+      - GATEWAY_PORT=8080
+      - GIN_MODE=debug
+    ports:
+      - "8080:8080"
+    depends_on:
+      - agent-service
+    networks:
+      - touchcli_network
+    restart: unless-stopped
+
+  # ========================================================================
+  # Celery Worker (for async task processing)
+  # ========================================================================
+  celery-worker:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    container_name: touchcli-celery-worker
+    command: celery -A agent_service.tasks worker --loglevel=info
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://touchcli_user:touchcli_password@postgres:5432/touchcli
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - LOG_LEVEL=INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - touchcli_network
+    restart: unless-stopped
+
+  # ========================================================================
+  # Celery Flower (monitoring dashboard)
+  # ========================================================================
+  flower:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    container_name: touchcli-flower
+    command: celery -A agent_service.tasks flower --port=5555
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+    networks:
+      - touchcli_network
+    restart: unless-stopped
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  touchcli_network:
+    driver: bridge
+
+# ============================================================================
+# Volumes for data persistence
+# ============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
