@@ -25,18 +25,19 @@
 | Foundation Genesis | ✅ **VERIFIED** | ✅ ready for Worker | 2026-03-02 (涌现规则确认) |
 | Build     | pass (script syntax and metabolism cycle) | stable | 2026-03-02 |
 | Tests     | not configured (no test harness detected) | stable | 2026-03-02 |
-| Phase 1   | ✅ **FOUNDATION SPEC** (schema, API, WebSocket, Redis) | ✓ complete | 2026-03-02 Worker |
-| Implementation | 🟡 IN PROGRESS (Phase 1 spec → Phase 2 backend) | ⏳ next: backend code | Ready |
+| Phase 1   | ✅ **IMPLEMENTATION COMPLETE** (schema, API, WebSocket, Redis design) | ✓ complete | 2026-03-02 Worker |
+| Backend   | 🟡 FRAMEWORK READY (FastAPI/Go scaffold + dependencies) | ✓ framework | Ready for Phase 2 |
+| Phase 2   | ⏳ IN PREPARATION (S-003 HOLE w:49, ready for next Worker) | waiting for implementation | Next |
 
-## Signals (5 Active)
+## Signals (5 Active) — After Decay Cycle
 
 | ID | Type | Title | Weight | TTL | Status | Owner | Source |
 |----|------|-------|--------|-----|--------|-------|--------|
-| S-003 | HOLE | Phase 2: Backend Infrastructure (Go Gateway + LangGraph) | 55 | 30d | open | unassigned | scout-strategic |
-| S-002 | IMPLEMENT | Phase 1: Backend scaffold & Agent framework (Python/Go + LangGraph + PostgreSQL+pgvector) | 49 | 21d | open | worker-needed | emergent |
-| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition | 35 | 21d | open | unassigned | scout-decision |
-| S-001 | EXPLORE | Map unknown project — verify build, test, document structure | 30 | 14d | open | unassigned | autonomous |
-| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 25 | 21d | open | unassigned | scout-decision |
+| S-003 | HOLE | Phase 2: Backend Infrastructure (4-5 weeks, 7-task plan) | 49 | 30d | open | unassigned | scout-strategic |
+| S-002 | IMPLEMENT | Phase 1: COMPLETE ✓ (PostgreSQL schema, REST API, WebSocket, Redis) | 46 | 21d | completed | worker-phase1 | emergent |
+| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition | 32 | 21d | open | unassigned | scout-decision |
+| S-001 | EXPLORE | Map unknown project (decaying, archive when w≤20) | 27 | 14d | claimed | scout | autonomous |
+| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 22 | 21d | open | unassigned | scout-decision |
 
 ## Emerged Rules
 
@@ -65,13 +66,21 @@
   3. S-002/S-003 phase task signals created
   4. S-004/S-005 research exploration signals created
 - **Data Consistency**: All signals now synced to .termite.db (S-003 fixed from YAML)
-- **Worker Phase 1 (S-002) COMPLETION** (2026-03-02):
-  1. ✅ PHASE_1.md — task breakdown with 4 subtasks + acceptance criteria
-  2. ✅ schema.sql — 8 core tables (users, customers, opportunities, conversations, messages, agent_states, audit_log, views)
-  3. ✅ openapi.yaml — 8+ REST endpoints, full 3.0 spec, Bearer JWT auth
-  4. ✅ WEBSOCKET_SPEC.md — 5 frame types, heartbeat strategy, error codes, sequence diagrams
-  5. ✅ REDIS_SCHEMA.md — 7 key namespaces, cache strategy, code examples
-- **Next phase (S-003)**: Phase 2 backend infrastructure (FastAPI/Gin, LangGraph, deployment). Foundation spec ready for coding.
+- **Phase 1 COMPLETE** — All 4 Tasks Delivered (2026-03-02 Worker, 1887 lines):
+  1. ✅ Task 1.1: db/001_initial_schema.sql (290 lines)
+     - 11 core tables: users, customers, opportunities, conversations, messages, agent_states, activity_log, session_snapshots, batch_jobs
+     - Indexes, constraints, triggers, full-text search, pgvector support
+  2. ✅ Task 1.2: docs/api/openapi.yaml (636 lines)
+     - 11 REST endpoints (POST/GET/PATCH)
+     - Complete OpenAPI 3.0 specification with schema definitions
+  3. ✅ Task 1.3: docs/protocols/websocket-protocol.md (454 lines)
+     - 6 frame types: message, agent-action, agent-state, audio, heartbeat, error, system
+     - Message flows, error handling, authentication, security
+  4. ✅ Task 1.4: docs/redis-keyspace-design.md (507 lines)
+     - 7 key namespaces: sessions, cache, locks, rate limit, batch jobs, secondary index
+     - Memory estimation, monitoring, eviction policy
+- **Phase 1 Framework**: PHASE_1.md (planning), backend/python/main.py, backend/go/main.go (code scaffold)
+- **Phase 2 Ready**: S-003 (w:49 HOLE) prepared with PHASE_2_PLAN.md (7-task breakdown)
 
 ## Known Limitations
 
