@@ -28,6 +28,7 @@ try:
         HealthCheckResponse, ComponentHealth
     )
     from .workflow import ConversationWorkflow
+    from .auth import get_current_user, create_token
 except ImportError:
     # Fallback for direct execution
     from db import get_db, engine, init_db, get_db_health
@@ -40,6 +41,7 @@ except ImportError:
         HealthCheckResponse, ComponentHealth
     )
     from workflow import ConversationWorkflow
+    from auth import get_current_user, create_token
 
 # Configure logging
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
@@ -81,6 +83,39 @@ app.add_middleware(
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/touchcli")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
+# ============================================================================
+# Authentication
+# ============================================================================
+
+@app.post("/login")
+async def login(user_id: UUID, db: Session = Depends(get_db)):
+    """
+    Generate JWT token for a user.
+
+    Args:
+        user_id: User UUID (in production, would be authenticated via password)
+
+    Returns:
+        - access_token: JWT token for subsequent requests
+        - token_type: "bearer"
+        - user_id: User UUID
+    """
+    # TODO: In production, verify user credentials (password, MFA, etc.)
+    # For now, we accept any user_id and verify they exist in the database
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token = create_token(user.id)
+    logger.info(f"Generated token for user {user.id}")
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user_id": str(user.id)
+    }
 
 # ============================================================================
 # Health Check
@@ -147,7 +182,7 @@ async def health_check(db: Session = Depends(get_db)):
 async def create_conversation(
     req: ConversationCreate,
     db: Session = Depends(get_db),
-    user_id: Optional[UUID] = None  # TODO: Extract from JWT token
+    user_id: UUID = Depends(get_current_user)
 ):
     """
     Start a new conversation.
@@ -159,10 +194,6 @@ async def create_conversation(
     Returns:
         Conversation object with metadata
     """
-    if not user_id:
-        # For now, use a placeholder user_id
-        # TODO: Extract from JWT token in Authorization header
-        raise HTTPException(status_code=401, detail="Unauthorized - missing JWT token")
 
     # Validate customer_id and opportunity_id if provided
     if req.customer_id:
@@ -218,7 +249,7 @@ async def get_conversation(
 async def send_message(
     req: MessageCreate,
     db: Session = Depends(get_db),
-    sender_id: Optional[UUID] = None  # TODO: Extract from JWT token
+    sender_id: UUID = Depends(get_current_user)
 ):
     """
     Send message and trigger Agent processing.
