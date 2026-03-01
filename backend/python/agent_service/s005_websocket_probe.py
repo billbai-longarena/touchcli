@@ -1,6 +1,6 @@
 """
 WebSocket RTT latency probe for S-005 performance SLA
-Measures round-trip time for heartbeat messages via WebSocket
+Measures round-trip time for protocol ping/pong via WebSocket
 
 Usage:
     python -m agent_service.s005_websocket_probe [--samples=50] [--url=ws://localhost:8080/ws]
@@ -8,12 +8,10 @@ Usage:
 
 import asyncio
 import time
-import json
 import logging
 import sys
 from statistics import mean, median, quantiles
 from typing import List, Tuple
-from datetime import datetime
 
 try:
     import websockets
@@ -47,40 +45,20 @@ async def probe_websocket_rtt(
 
     for i in range(samples):
         try:
-            # Connect to WebSocket
-            start_time = time.time() * 1000  # milliseconds
+            start_time = time.perf_counter() * 1000
+            async with websockets.connect(url, open_timeout=timeout, close_timeout=timeout) as websocket:
+                # Measure protocol-level RTT using ping/pong.
+                pong_waiter = await websocket.ping()
+                await asyncio.wait_for(pong_waiter, timeout=timeout)
+            end_time = time.perf_counter() * 1000
+            rtt_ms = end_time - start_time
+            latencies.append(rtt_ms)
+            success += 1
 
-            async with asyncio.timeout(timeout):
-                async with websockets.connect(url) as websocket:
-                    # Send heartbeat message
-                    heartbeat = {
-                        "type": "heartbeat",
-                        "ts": datetime.utcnow().isoformat(),
-                        "seq": i
-                    }
-                    await websocket.send(json.dumps(heartbeat))
+            if (i + 1) % 10 == 0:
+                logger.info(f"Progress: {i + 1}/{samples} samples")
 
-                    # Wait for any response (connection itself demonstrates RTT)
-                    try:
-                        response = await asyncio.wait_for(websocket.recv(), timeout=timeout)
-                        end_time = time.time() * 1000
-                        rtt_ms = end_time - start_time
-                        latencies.append(rtt_ms)
-                        success += 1
-
-                        if (i + 1) % 10 == 0:
-                            logger.info(f"Progress: {i + 1}/{samples} samples")
-                    except asyncio.TimeoutError:
-                        # Connection successful but no response in time
-                        end_time = time.time() * 1000
-                        rtt_ms = end_time - start_time
-                        if rtt_ms < 10000:  # Reasonable timeout
-                            latencies.append(rtt_ms)
-                            success += 1
-                        else:
-                            failure += 1
-
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, TimeoutError):
             failure += 1
         except Exception as e:
             logger.debug(f"Sample {i + 1} failed: {e}")
@@ -182,6 +160,11 @@ async def main():
 
         # Check SLA compliance (p99 < 100ms target)
         sla_target = 100
+        print(
+            f"websocket_rtt success={success} failure={failure} "
+            f"p50_ms={percentiles['p50']:.3f} p95_ms={percentiles['p95']:.3f} "
+            f"p99_ms={percentiles['p99']:.3f} avg_ms={avg_ms:.3f}"
+        )
         if percentiles["p99"] < sla_target:
             logger.info(f"✓ WebSocket RTT within SLA (p99={percentiles['p99']:.3f}ms < {sla_target}ms)")
             return 0
