@@ -14,6 +14,10 @@ from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
 import logging
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 # Import from local modules (use relative imports for package)
 try:
@@ -111,6 +115,15 @@ app = FastAPI(
     description="Conversational Sales Assistant Backend"
 )
 
+# Rate Limiting Configuration
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(
+    status_code=429,
+    content={"detail": "Rate limit exceeded"}
+))
+app.add_middleware(SlowAPIMiddleware)
+
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
@@ -133,7 +146,8 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 # ============================================================================
 
 @app.post("/login")
-async def login(user_id: UUID, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(request, user_id: UUID, db: Session = Depends(get_db)):
     """
     Generate JWT token for a user.
 
@@ -242,7 +256,8 @@ async def health_check(db: Session = Depends(get_db)):
 # ============================================================================
 
 @app.post("/conversations", response_model=ConversationResponse, status_code=201)
-async def create_conversation(
+@limiter.limit("30/minute")
+async def create_conversation(request,
     req: ConversationCreate,
     db: Session = Depends(get_db),
     user_id: UUID = Depends(get_current_user),
@@ -303,7 +318,9 @@ async def create_conversation(
 
 
 @app.get("/conversations/{conversation_id}", response_model=ConversationResponse)
+@limiter.limit("60/minute")
 async def get_conversation(
+    request,
     conversation_id: UUID,
     db: Session = Depends(get_db)
 ):
@@ -327,7 +344,9 @@ async def get_conversation(
 # ============================================================================
 
 @app.post("/messages", status_code=202)
+@limiter.limit("100/minute")
 async def send_message(
+    request,
     req: MessageCreate,
     db: Session = Depends(get_db),
     sender_id: UUID = Depends(get_current_user)
@@ -408,7 +427,9 @@ async def send_message(
 
 
 @app.get("/conversations/{conversation_id}/messages")
+@limiter.limit("60/minute")
 async def get_messages(
+    request,
     conversation_id: UUID,
     limit: int = 50,
     offset: int = 0,
@@ -453,7 +474,9 @@ async def get_messages(
 # ============================================================================
 
 @app.post("/opportunities", response_model=OpportunityResponse, status_code=201)
+@limiter.limit("30/minute")
 async def create_opportunity(
+    request,
     req: OpportunityCreate,
     db: Session = Depends(get_db)
 ):
@@ -496,7 +519,9 @@ async def create_opportunity(
 
 
 @app.get("/opportunities")
+@limiter.limit("60/minute")
 async def list_opportunities(
+    request,
     status: Optional[str] = None,
     customer_id: Optional[UUID] = None,
     limit: int = 50,
@@ -541,7 +566,9 @@ async def list_opportunities(
 # ============================================================================
 
 @app.post("/customers", response_model=CustomerResponse, status_code=201)
+@limiter.limit("30/minute")
 async def create_customer(
+    request,
     req: CustomerCreate,
     db: Session = Depends(get_db)
 ):
@@ -557,7 +584,8 @@ async def create_customer(
 
 
 @app.get("/customers/{customer_id}", response_model=CustomerResponse)
-async def get_customer(customer_id: UUID, db: Session = Depends(get_db)):
+@limiter.limit("100/minute")
+async def get_customer(request, customer_id: UUID, db: Session = Depends(get_db)):
     """Get customer by ID"""
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:
@@ -570,7 +598,8 @@ async def get_customer(customer_id: UUID, db: Session = Depends(get_db)):
 # ============================================================================
 
 @app.get("/tasks/{task_id}")
-async def get_task_status(task_id: str):
+@limiter.limit("10/minute")
+async def get_task_status(request, task_id: str):
     """
     Poll async task status.
 

@@ -26,6 +26,7 @@ pydantic-settings==2.1.0
 
 # Authentication & Security
 pyjwt==2.8.1
+slowapi==0.1.9
 
 # Environment
 python-dotenv==1.0.0
