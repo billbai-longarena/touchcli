@@ -37,7 +37,7 @@
 | S-003 | HOLE | Phase 2: ✅ COMPLETE (7 tasks, 3,569 lines, all endpoints + agents + Celery) | 42 | 30d | completed | worker-phase2 | emergent |
 | S-002 | IMPLEMENT | Phase 1: ✅ COMPLETE (schema, API, WebSocket, Redis design) | 39 | 21d | completed | worker-phase1 | emergent |
 | S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition (DB + WebSocket probes created) | 24 | 21d | open | unassigned | worker-perf |
-| S-001 | EXPLORE | Map unknown project (at archive threshold w≤20) | 20 | 14d | claimed | scout | autonomous |
+| S-001 | EXPLORE | Map unknown project (✅ ARCHIVED per Rule R-001: w≤20) | 17 | 14d | archived | scout | autonomous |
 | S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 15 | 21d | open | unassigned | scout-decision |
 
 ## Emerged Rules
@@ -53,19 +53,20 @@
 
 ## Notes for AI
 
-- **Phase Transition**: Genesis ✅ → Phase 1 ✅ → Phase 2 ✅ → **Phase 3 Ready**
+- **Project Timeline**: Genesis ✅ → Phase 1 ✅ → Phase 2 ✅ → Phase 3 Ready 🟡 → Phase 4+ (Planning)
 - **DECISIONS.md**: Strategic planning complete (5 Phase breakdown, 12-16 week timeline, 8 core decisions + 2 EXPLORE items)
 - **Signal Hierarchy** (current):
-  - S-003 (w:42, HOLE) — Phase 2 complete ✅ (JWT, seeds, tests prep done)
-  - S-002 (w:39, IMPLEMENT) — Phase 1 complete ✅
-  - S-005 (w:25, PROBE) — Performance SLA research (Phase 3+ priority)
-  - S-001 (w:20, EXPLORE) — At archive threshold, ready for final archival
-  - S-004 (w:15, PROBE) — i18n research (Phase 3+ priority)
-- **Scout Completions**:
-  1. Foundation Genesis verified (4 Scout sessions, Rule R-001 emerged)
-  2. DECISIONS.md with 5-phase strategic plan
-  3. S-002/S-003 phase task signals created
-  4. S-004/S-005 research exploration signals created
+  - S-003 (w:39, HOLE) — Phase 2 complete ✅ (3,569 lines, all tasks)
+  - S-002 (w:36, IMPLEMENT) — Phase 1 complete ✅ (1,887 lines specs)
+  - S-005 (w:22, PROBE) — Performance benchmarks (suite created, ready for baselines)
+  - S-004 (w:12, PROBE) — i18n research (Phase 3+ priority)
+  - S-001 (w:17, EXPLORE) — ✅ ARCHIVED per Rule R-001 (w≤20 threshold reached)
+- **Completion Milestones**:
+  1. ✅ Genesis verified (Rule R-001 emerged: Foundation Genesis Verified)
+  2. ✅ Phase 1 complete (1,887 lines specifications)
+  3. ✅ Phase 2 complete (3,569 lines implementation + Docker)
+  4. ✅ Phase 3 prerequisites complete (JWT, seeds, tests, CORS, benchmarks)
+  5. ✅ S-001 archived per Rule R-001 (w:17 ≤ 20)
 - **Data Consistency**: All signals now synced to .termite.db (S-003 fixed from YAML)
 - **Phase 1 COMPLETE** — All 4 Tasks Delivered (2026-03-02 Worker, 1887 lines):
   1. ✅ Task 1.1: db/001_initial_schema.sql (290 lines)
