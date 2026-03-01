@@ -201,13 +201,15 @@ func healthCheck(c *gin.Context) {
 	agentServiceOk := checkServiceHealth(AGENT_SERVICE_URL)
 
 	statusCode := "ok"
+	agentStatus := "ok"
 	if !agentServiceOk {
 		statusCode = "degraded"
+		agentStatus = "error"
 	}
 
 	c.JSON(200, gin.H{
 		"status":        statusCode,
-		"agent_service": map[string]interface{}{"status": "ok" + fmt.Sprint(!agentServiceOk)},
+		"agent_service": map[string]interface{}{"status": agentStatus},
 	})
 }
 
