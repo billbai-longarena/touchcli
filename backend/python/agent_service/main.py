@@ -5,7 +5,7 @@ Phase 2: Backend Infrastructure Implementation
 
 from fastapi import FastAPI, Depends, HTTPException, status, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
@@ -18,6 +18,11 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from prometheus_client import Counter, Histogram, make_wsgi_app
+from prometheus_client import CollectorRegistry, generate_latest
 
 # Import from local modules (use relative imports for package)
 try:
@@ -115,6 +120,64 @@ app = FastAPI(
     description="Conversational Sales Assistant Backend"
 )
 
+# ============================================================================
+# Observability: Sentry Error Tracking
+# ============================================================================
+sentry_dsn = os.getenv("SENTRY_DSN")
+if sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        integrations=[
+            FastApiIntegration(),
+            SqlalchemyIntegration(),
+        ],
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+        environment=os.getenv("ENVIRONMENT", "development"),
+        release=os.getenv("APP_VERSION", "1.0.0"),
+        debug=os.getenv("DEBUG", "false").lower() == "true"
+    )
+    logger.info("Sentry error tracking initialized")
+
+# ============================================================================
+# Observability: Prometheus Metrics
+# ============================================================================
+# Request metrics
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status']
+)
+
+http_request_duration_seconds = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request latency',
+    ['method', 'endpoint'],
+    buckets=(0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0)
+)
+
+# Database metrics
+db_query_duration_seconds = Histogram(
+    'db_query_duration_seconds',
+    'Database query latency',
+    ['operation'],
+    buckets=(0.001, 0.01, 0.05, 0.1, 0.5, 1.0)
+)
+
+# Agent metrics
+agent_responses_total = Counter(
+    'agent_responses_total',
+    'Total agent responses',
+    ['status', 'confidence_level']
+)
+
+agent_response_time_seconds = Histogram(
+    'agent_response_time_seconds',
+    'Agent response processing time',
+    buckets=(0.1, 0.5, 1.0, 2.0, 5.0, 10.0)
+)
+
+logger.info("Prometheus metrics initialized")
+
 # Rate Limiting Configuration
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
@@ -174,6 +237,23 @@ async def login(request, user_id: UUID, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "user_id": str(user.id)
     }
+
+# ============================================================================
+# Metrics Endpoint (for Prometheus scraping)
+# ============================================================================
+
+@app.get("/metrics")
+async def metrics():
+    """
+    Prometheus metrics endpoint.
+
+    Returns:
+        Prometheus-formatted metrics (text/plain)
+    """
+    return Response(
+        content=generate_latest(),
+        media_type="text/plain; version=0.0.4"
+    )
 
 # ============================================================================
 # Health Check
