@@ -36,7 +36,7 @@
 |----|------|-------|--------|-----|--------|-------|--------|
 | S-003 | HOLE | Phase 2: ✅ COMPLETE (7 tasks, 3,569 lines, all endpoints + agents + Celery) | 42 | 30d | completed | worker-phase2 | emergent |
 | S-002 | IMPLEMENT | Phase 1: ✅ COMPLETE (schema, API, WebSocket, Redis design) | 39 | 21d | completed | worker-phase1 | emergent |
-| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition | 25 | 21d | open | unassigned | scout-decision |
+| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition (DB + WebSocket probes created) | 24 | 21d | open | unassigned | worker-perf |
 | S-001 | EXPLORE | Map unknown project (at archive threshold w≤20) | 20 | 14d | claimed | scout | autonomous |
 | S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 15 | 21d | open | unassigned | scout-decision |
 
@@ -95,6 +95,13 @@
   - ✅ CORS Hardening: Environment-based origin allowlist (localhost:3000, localhost:5173 safe defaults)
   - ✅ Integration Tests: Created test_integration.py (274 lines) with 20+ scenarios, pytest fixtures, in-memory DB
   - **Status: Ready for Phase 3 frontend implementation** (Tasks 3.1-3.7)
+
+- **S-005 Performance Benchmarks: IN PROGRESS** (2026-03-02 Worker)
+  - ✅ Database Benchmarks: benchmarks.py (363 lines) with 7 test suites (insert, query, bulk, relationships, joins, FTS, pagination)
+  - ✅ WebSocket Benchmarks: websocket_benchmark.py (212 lines) with RTT, connection setup, concurrent tests
+  - ✅ Benchmark Runner: run_benchmarks.py for orchestration and SLA validation
+  - ✅ SLA Targets: Configured (DB p99<50ms, WebSocket p99<100ms, Agent response p95<500ms)
+  - Status: Ready for baseline measurement once Docker stack online
 
 ## Known Limitations
 
