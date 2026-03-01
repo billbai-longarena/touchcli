@@ -82,47 +82,87 @@ IF 不可执行:
 
 ## Host Project Overview
 
-<!-- 在此填写宿主项目概述 -->
+**项目名称**: TouchCLI — 纯对话式 AI 销售助手框架
+
+**核心定位**: 砍掉所有 GUI，用对话和语音替代表格、表单、仪表盘。Agent 主动为销售人员完成数据录入、客户跟进、商机管理和策略建议。
+
+**背景**: 从 SalesTouch（Vue 3 重 GUI 平台）衍生，面向 B2B（客户经理）和 B2C（医美顾问）销售人员。用户需要"告诉我该做什么"和"帮我做"，而不是"教我怎么用"。
+
+**核心原则**:
+1. 零学习成本 — 会说话就会用
+2. Agent 先行动 — 主动推送任务和建议
+3. 对话即操作 — 语音指令直接创建/更新数据
+4. 语音优先 — 开车、见客户时可用
+5. 全终端一致 — 手机、平板、电脑同体验
+
+**设计参考**: `DESIGN.md` (第 1-5 节，用户场景、架构总览、技术选型、Agent 设计)
 
 ## Host Project Structure & Module Organization
 
-<!-- 在此填写宿主项目目录结构说明 -->
+本仓库既是 **Termite Protocol 框架库本身**，又是 **TouchCLI 项目的设计与规划库**。当前阶段纯文档驱动，分为两层：
+
+**第一层 — 协议框架 (已完成)**:
+- `TERMITE_PROTOCOL.md` — 完整的多 Agent 协作协议规范
+- `CLAUDE.md` / `AGENTS.md` — 入口文件与心跳内核
+- `scripts/` — 10+ 生命周期脚本（到达、代谢、沉积、认领）
+- `.termite.db` — SQLite 信号存储与状态管理
+
+**第二层 — 应用设计 (规划中)**:
+- `DESIGN.md` — TouchCLI 完整设计文档（产品定位、用户场景、技术栈、Agent 拓扑）
+- `QUICKSTART.md` — 协议快速上手（安装、配置、创世）
+- `BLACKBOARD.md` — 蚁丘健康状态与信号库存
+- `UPGRADE_NOTES.md` — 协议版本变更记录
+
+**模块对应** (见 CLAUDE.md 路由表):
+- `DESIGN.md` → 产品与应用架构
+- `AGENTS.md` → Agent 开发与非交互扩展
+- `TERMITE_PROTOCOL.md` → 协议规范与术语
+- `scripts/` → 场基础设施与工具
+- `signals/` + `BLACKBOARD.md` → 信号与观察
 
 ---
 
 ## 场基础设施 / Field Infrastructure
 
-<!-- 如果宿主项目配置了场基础设施，取消注释并填写实际路径 -->
-<!-- | 工具 | 作用 |
-|------|------|
-| `scripts/field-arrive.sh` | 到达仪式 — 注入 .birth、感受场脉搏 |
-| `scripts/field-cycle.sh` | 完整呼吸 — 衰减→排水→脉搏（post-commit hook） |
-| `scripts/field-deposit.sh` | 信息素沉淀 — 会话结束时生成 .pheromone |
-| `scripts/field-export-audit.sh` | 审计包导出 — 导出蚁丘协议产物供协议源仓库审计（不含宿主项目代码） |
-| `scripts/field-claim.sh` | 认领锁 — claim/release/check |
-| `signals/rules/*.yaml` | 触发-动作规则（由 field-arrive 注入 .birth） |
-| `signals/active/*.yaml` | 活跃信号数据 |
-| `.pheromone` | 大模型间的化学痕迹（JSON） |
-| `.birth` | 本次会话的出生证明（由 arrive 生成） | -->
+| 工具/文件 | 作用 | 说明 |
+|----------|------|------|
+| `scripts/field-arrive.sh` | 到达仪式 | 每个会话开始时运行，生成 `.birth`（≤800 tokens），感知蚁丘脉搏 |
+| `scripts/field-cycle.sh` | 完整代谢循环 | 衰减过期信号、排水归档、更新蚁丘脉搏，由 post-commit hook 自动触发 |
+| `scripts/field-deposit.sh` | 信息素沉积 | 记录观察 (Observation)、个体信息素 (.pheromone)、规则争议 |
+| `scripts/field-export-audit.sh` | 审计包导出 | 导出不含项目源码的蚁丘协议产物，供协议源仓库的 Protocol Nurse 分析 |
+| `scripts/field-claim.sh` | 认领与释放 | 互斥锁机制，claim/release/check/list/expired 子命令，支持多 Agent 并发 |
+| `signals/rules/*.yaml` | 触发-动作规则 | 由 field-arrive.sh 注入 `.birth`；规则来自协议规范和通过"涌现"产生 |
+| `signals/active/*.yaml` | 活跃信号导出 | `.termite.db` 中 active 信号的 YAML 快照，用于人类阅读和审计 |
+| `.pheromone` | 信息素痕迹 | JSON 格式，记录会话结束时的完成项、未解决项、交接质量，chain 成时间序列 |
+| `.birth` | 出生证明 | 本次会话的完整态势（种姓、信号、规则、权限、预算），由 field-arrive.sh 生成 |
+| `.termite.db` | 主存储 | SQLite WAL 模式，所有信号、观察、规则、认领的单一事实源，支持并发多 Agent |
 
 ---
 
 ## 路由表：任务 → 局部黑板
 
-| 任务关键词 | 局部黑板 |
-| ---------- | -------- |
-<!-- | 模块 A 相关关键词 | `path/to/module-a/BLACKBOARD.md` | -->
-<!-- | 模块 B 相关关键词 | `path/to/module-b/BLACKBOARD.md` | -->
+| 任务关键词 | 局部黑板 | 模块 |
+| ---------- | -------- | ---- |
+| `design` / `product` / `touchcli` / `对话` / `Agent 架构` | `DESIGN.md` | TouchCLI 产品定位与技术架构 |
+| `agent` / `framework` / `白蚁` / `协议` / `非交互` | `AGENTS.md` | 非交互 Agent 扩展与框架入口 |
+| `protocol` / `termite` / `规范` / `术语` / `种姓` | `TERMITE_PROTOCOL.md` | 完整协议规范（9 语法规则 + 4 安全网） |
+| `script` / `场基础设施` / `field-*` / `shell` | `scripts/` | 生命周期工具、代谢循环、认领机制 |
+| `signal` / `信息素` / `pheromone` / `观察` | `signals/` + `BLACKBOARD.md` | 活跃信号与观察库 |
+| `config` / `配置` / `分支` / `governance` | `CLAUDE.md` | 项目配置、分支治理、技术栈 |
 
 ---
 
 ## Build, Test, and Development Commands
 
-| 操作 | 命令 |
-| ---- | ---- |
-<!-- | 安装依赖 | `npm install` | -->
-<!-- | 构建     | `npm run build` | -->
-<!-- | 测试     | `npm run test` | -->
+| 操作 | 命令 | 说明 |
+| ---- | ---- | ---- |
+| 到达仪式 | `./scripts/field-arrive.sh` | 每个会话开始时运行，生成 `.birth`，设置态势 |
+| 信息素沉积 | `./scripts/field-deposit.sh --pattern '...' --context '...'` | 会话结束时沉积观察、信息素、规则争议 |
+| 脚本语法检查 | `bash -n scripts/field-*.sh` | 所有 shell 脚本通过语法检查 |
+| 代码风格检查 | `shellcheck scripts/` | 可选，检查常见 shell 反模式（如需） |
+| 数据库检查 | `sqlite3 .termite.db ".tables"` | 验证 SQLite 表结构（signals、observations、rules、claims 等） |
+| 信号导出同步 | `ls signals/active/ && sqlite3 .termite.db "SELECT id FROM signals WHERE status='open'"` | 快照与数据库一致性检查 |
+| Git 提交 | `git add . && git commit -m "[termite:YYYY-MM-DD:caste] ..."` | 所有改动必须带 termite 签名 |
 
 ---
 

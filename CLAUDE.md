@@ -101,14 +101,15 @@
 
 | 改动类型 | 验证方式 |
 | -------- | -------- |
-| 协议脚本 | `bash -n scripts/field-*.sh` 通过；`shellcheck` 建议检查 |
-| Markdown 文档 | `TERMITE_PROTOCOL.md` 版本与 `.birth` 中 `termite-kernel` 一致 |
-| SQLite 数据库 | `sqlite3 .termite.db ".tables"` 返回预期的表结构 |
-| 信号导出 | `.termite.db` 的 active 信号与 `signals/active/` 快照同步 |
-| Git 状态 | `git status` 干净，无未提交的 .md 文件删除 |
-| **TouchCLI 设计** | `DESIGN.md` 完整，用户场景覆盖 B2B/B2C/移动端 |
-| **Agent 实现** | `AGENTS.md` 与 `DESIGN.md` 场景一一对应，规则已注入 `.birth` |
-| **端到端架构** | SalesTouch 存量功能 → TouchCLI 对话流转换，无功能衰减 |
+| **协议脚本** | `bash -n scripts/field-*.sh` 通过；`shellcheck scripts/` 无致命错误 |
+| **Markdown 文档** | `grep "termite-kernel" CLAUDE.md AGENTS.md TERMITE_PROTOCOL.md` 版本一致 |
+| **SQLite 数据库** | `sqlite3 .termite.db ".tables \| grep -E 'signals\|observations\|rules'"` 返回预期表 |
+| **信号导出同步** | `diff <(sqlite3 .termite.db "SELECT id FROM signals") <(ls signals/active/S-*.yaml \| xargs -n1 basename)` 无差异 |
+| **Git 状态** | `git status` 干净；无未提交的 .md 删除；`git log --oneline -5` 有 `[termite:*]` 签名 |
+| **DESIGN.md 完整** | 用户场景覆盖 B2B（客户经理）、B2C（医美顾问）、通用场景；完整技术栈 (第 228-246 行) |
+| **Agent 架构** | Router → (Sales / Data / Strategy) + 后台 (Sentinel / Memory / Coach) 拓扑图；职责定义清晰 |
+| **技术栈验证** | 前端 React 19、后端 Python/Go、DB PostgreSQL + pgvector、通信 Socket.IO/SSE、Agent LangGraph |
+| **端到端流程** | 用户输入 → Router 意图识别 → Agent 执行 → 工具调用 → 数据库 → 结果返回，无环节缺失 |
 
 ## Build / Test / Dev Commands
 
