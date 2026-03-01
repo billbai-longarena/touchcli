@@ -26,9 +26,16 @@
 
 ## Signals
 
-| ID | Type | Title | Weight | TTL | Status | Owner |
-|----|------|-------|--------|-----|--------|-------|
-| S-001 | EXPLORE | Map unknown project — verify build, test, document structure | 32 | 14d | open | unassigned |
+| ID | Type | Title | Weight | TTL | Status | Owner | Source |
+|----|------|-------|--------|-----|--------|-------|--------|
+| S-002 | IMPLEMENT | Backend scaffold & Agent framework (Python/Go + LangGraph + PostgreSQL+pgvector) | 50 | 21d | open | worker-needed | emergent |
+| S-001 | EXPLORE | Map unknown project — verify build, test, document structure | 31 | 14d | open | unassigned | autonomous |
+
+## Emerged Rules
+
+| ID | Trigger | Action | Source | Hit Count | Created |
+|----|---------|--------|--------|-----------|---------|
+| R-001 | ≥3 Scout observations confirm: protocol framework stable, project type identified, docs complete, routing resolved | Foundation Genesis Verified → Worker phase ready. Maintain S-001 until weight ≤ 20, then archive. | 5 observations | 1 | 2026-03-02 |
 
 ## Hotspot Areas
 
@@ -37,9 +44,13 @@
 
 ## Notes for AI
 
+- **Phase Transition**: Foundation Genesis → Worker Implementation (Rule R-001 emerged)
+- **S-001 Status**: Scout EXPLORE complete, weight decay in progress, will archive when weight ≤ 20
+- **S-002 Ready**: Worker-assigned IMPLEMENT task, weight=50, next phases clearly defined
 - Use `./scripts/field-arrive.sh` as entrypoint for each session.
 - Keep DB-first flow; treat `signals/active/*.yaml` as snapshots.
 - If adding CI, start with shell validation (`bash -n`, then `shellcheck` where available).
+- Next caste (Worker): Backend implementation. Can claim S-002 when arriving.
 
 ## Known Limitations
 
