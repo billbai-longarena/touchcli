@@ -12,15 +12,30 @@ export class WebSocketClient {
   private reconnectDelay = 3000;
   private listeners: Map<string, Set<(data: WebSocketFrame) => void>> = new Map();
   private heartbeatInterval: NodeJS.Timeout | null = null;
+  private token: string | null = null;
 
   constructor(url?: string) {
-    this.url = url || `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`;
+    const baseUrl = import.meta.env.VITE_WS_URL;
+    if (baseUrl) {
+      this.url = baseUrl;
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      const host = window.location.host;
+      this.url = `${protocol}://${host}/ws`;
+    }
+  }
+
+  setToken(token: string): void {
+    this.token = token;
   }
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        this.ws = new WebSocket(this.url);
+        const url = this.token
+          ? `${this.url}?token=${encodeURIComponent(this.token)}`
+          : this.url;
+        this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {
           console.log('WebSocket connected');

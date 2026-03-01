@@ -1,7 +1,8 @@
 import axios from 'axios';
 import type { AxiosInstance } from 'axios';
+import { useAuthStore } from '../store/authStore';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -10,9 +11,9 @@ export const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// Add request interceptor for JWT token
+// Add request interceptor for JWT token from auth store
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
+  const token = useAuthStore.getState().token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

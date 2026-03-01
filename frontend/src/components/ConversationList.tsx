@@ -8,11 +8,23 @@ export function ConversationList() {
     currentConversation,
     setCurrentConversation,
     fetchConversations,
+    subscribeToMessages,
+    unsubscribeFromMessages,
   } = useConversationStore();
 
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
+
+  useEffect(() => {
+    // Subscribe to WebSocket messages when conversation is selected
+    if (currentConversation) {
+      subscribeToMessages();
+      return () => {
+        unsubscribeFromMessages();
+      };
+    }
+  }, [currentConversation, subscribeToMessages, unsubscribeFromMessages]);
 
   return (
     <div className="conversation-list">

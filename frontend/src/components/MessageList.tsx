@@ -4,7 +4,7 @@ import type { Message } from '../store/conversationStore';
 import '../styles/MessageList.css';
 
 export function MessageList() {
-  const { messages, currentConversation, fetchMessages } = useConversationStore();
+  const { messages, currentConversation, fetchMessages, agentThinking, lastAgentAction, wsConnected } = useConversationStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -31,6 +31,10 @@ export function MessageList() {
         </div>
       ) : (
         <>
+          <div className="connection-status">
+            <span className={`status-indicator ${wsConnected ? 'connected' : 'disconnected'}`} />
+            {wsConnected ? 'Connected' : 'Connecting...'}
+          </div>
           <div className="messages">
             {messages.map((msg) => (
               <div
@@ -45,6 +49,20 @@ export function MessageList() {
                 </div>
               </div>
             ))}
+            {agentThinking && lastAgentAction && (
+              <div className="message agent-thinking">
+                <div className="message-content">
+                  <p className="thinking-indicator">
+                    {lastAgentAction.description}
+                    <span className="typing-dots">
+                      <span>.</span>
+                      <span>.</span>
+                      <span>.</span>
+                    </span>
+                  </p>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
         </>

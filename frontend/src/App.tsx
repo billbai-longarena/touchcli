@@ -17,10 +17,14 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    // Connect WebSocket on mount (for future conversation UI)
-    wsClient.connect().catch((error) => {
-      console.error('Failed to connect WebSocket:', error);
-    });
+    // Connect WebSocket when authenticated
+    const authStore = useAuthStore.getState();
+    if (authStore.token && authStore.isAuthenticated) {
+      wsClient.setToken(authStore.token);
+      wsClient.connect().catch((error) => {
+        console.error('Failed to connect WebSocket:', error);
+      });
+    }
 
     // Cleanup on unmount
     return () => {

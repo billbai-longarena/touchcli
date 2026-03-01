@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import apiClient from '../api/client';
+import { wsClient, type WebSocketFrame } from '../api/websocket';
 
 export interface Message {
   id: string;
@@ -41,6 +42,12 @@ export interface Customer {
   updated_at: string;
 }
 
+interface AgentAction {
+  type: string;
+  description: string;
+  timestamp: string;
+}
+
 interface ConversationStore {
   currentConversation: Conversation | null;
   messages: Message[];
@@ -49,6 +56,9 @@ interface ConversationStore {
   opportunities: Opportunity[];
   loading: boolean;
   error: string | null;
+  wsConnected: boolean;
+  agentThinking: boolean;
+  lastAgentAction: AgentAction | null;
 
   // Actions
   setCurrentConversation: (conversation: Conversation) => void;
@@ -60,6 +70,7 @@ interface ConversationStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
+  setWsConnected: (connected: boolean) => void;
 
   // Async actions
   fetchConversations: () => Promise<void>;
@@ -68,7 +79,12 @@ interface ConversationStore {
   fetchOpportunities: () => Promise<void>;
   createConversation: (customerId: string, title: string) => Promise<Conversation>;
   sendMessage: (conversationId: string, content: string) => Promise<Message>;
+  subscribeToMessages: () => void;
+  unsubscribeFromMessages: () => void;
 }
+
+let messageUnsubscribe: (() => void) | null = null;
+let actionUnsubscribe: (() => void) | null = null;
 
 export const useConversationStore = create<ConversationStore>((set) => ({
   currentConversation: null,
@@ -78,6 +94,9 @@ export const useConversationStore = create<ConversationStore>((set) => ({
   opportunities: [],
   loading: false,
   error: null,
+  wsConnected: false,
+  agentThinking: false,
+  lastAgentAction: null,
 
   setCurrentConversation: (conversation) => set({ currentConversation: conversation }),
   addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
@@ -88,6 +107,7 @@ export const useConversationStore = create<ConversationStore>((set) => ({
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
+  setWsConnected: (connected) => set({ wsConnected: connected }),
 
   fetchConversations: async () => {
     set({ loading: true, error: null });
@@ -171,5 +191,49 @@ export const useConversationStore = create<ConversationStore>((set) => ({
       set({ error: errorMessage, loading: false });
       throw error;
     }
+  },
+
+  subscribeToMessages: () => {
+    // Subscribe to incoming messages from agents
+    messageUnsubscribe = wsClient.on('message', (frame: WebSocketFrame) => {
+      const messageData = frame.data as unknown as Message;
+      if (messageData && typeof messageData === 'object' && 'id' in messageData) {
+        set((state) => {
+          // Only add if not already in messages
+          if (!state.messages.find((m) => m.id === messageData.id)) {
+            return { messages: [...state.messages, messageData] };
+          }
+          return state;
+        });
+      }
+    });
+
+    // Subscribe to agent actions (thinking/planning)
+    actionUnsubscribe = wsClient.on('agent-action', (frame: WebSocketFrame) => {
+      const actionData = frame.data as unknown as { type?: string; description?: string };
+      set({
+        agentThinking: true,
+        lastAgentAction: {
+          type: actionData?.type || 'processing',
+          description: actionData?.description || 'Agent is processing...',
+          timestamp: frame.timestamp,
+        },
+      });
+    });
+
+    // Mark as connected
+    set({ wsConnected: true });
+  },
+
+  unsubscribeFromMessages: () => {
+    if (messageUnsubscribe) {
+      messageUnsubscribe();
+      messageUnsubscribe = null;
+    }
+    if (actionUnsubscribe) {
+      actionUnsubscribe();
+      actionUnsubscribe = null;
+    }
+    set({ wsConnected: false, agentThinking: false });
   },
 }));
