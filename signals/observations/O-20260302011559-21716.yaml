@@ -1,4 +1,4 @@
-# READ-ONLY — auto-exported from .termite.db (2026-03-01T19:36:33Z)
+# READ-ONLY — auto-exported from .termite.db (2026-03-01T20:18:47Z)
 # To modify observations, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: O-20260302011559-21716
 pattern: "Routing table defined: design/agent/protocol/script/signal/config → corresponding blackboards"
