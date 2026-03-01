@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { useConversationStore, Message } from '../store/conversationStore';
+import { useConversationStore } from '../store/conversationStore';
+import type { Message } from '../store/conversationStore';
 import '../styles/MessageList.css';
 
 export function MessageList() {

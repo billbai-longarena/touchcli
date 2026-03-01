@@ -70,7 +70,7 @@ interface ConversationStore {
   sendMessage: (conversationId: string, content: string) => Promise<Message>;
 }
 
-export const useConversationStore = create<ConversationStore>((set, get) => ({
+export const useConversationStore = create<ConversationStore>((set) => ({
   currentConversation: null,
   messages: [],
   conversations: [],
