@@ -1,47 +1,41 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { useNavigate } from 'react-router-dom';
 
-/**
- * useAuth Hook
- * Provides authentication state and actions
- * Automatically redirects to login if not authenticated
- */
 export function useAuth() {
+  const store = useAuthStore();
   const navigate = useNavigate();
-  const {
-    user,
-    token,
-    isAuthenticated,
-    isLoading,
-    error,
-    login,
-    logout: logoutAction,
-    clearError,
-  } = useAuthStore();
+
+  // Restore session on mount
+  useEffect(() => {
+    store.restoreSession();
+  }, [store]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!store.isAuthenticated && window.location.pathname !== '/login') {
+      navigate('/login');
+    }
+  }, [store.isAuthenticated, navigate]);
+
+  const login = async (userId: string) => {
+    await store.login(userId);
+    navigate('/');
+  };
 
   const logout = () => {
-    logoutAction();
+    store.logout();
     navigate('/login');
   };
 
-  const handleLogin = async (userId: string) => {
-    try {
-      await login(userId);
-      navigate('/dashboard');
-    } catch (err) {
-      // Error is stored in state, component can display it
-      console.error('Login error:', err);
-    }
-  };
-
   return {
-    user,
-    token,
-    isAuthenticated,
-    isLoading,
-    error,
-    login: handleLogin,
+    user: store.user,
+    token: store.token,
+    isAuthenticated: store.isAuthenticated,
+    isLoading: store.isLoading,
+    error: store.error,
+    login,
     logout,
-    clearError,
+    clearError: store.clearError,
   };
 }
