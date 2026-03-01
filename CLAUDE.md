@@ -88,11 +88,14 @@
 
 ## 路由表：任务 → 局部黑板
 
-<!-- 根据宿主项目模块填写路由表 -->
-| 任务关键词 | 局部黑板 |
-| ---------- | -------- |
-<!-- | 模块 A 相关关键词 | `path/to/module-a/BLACKBOARD.md` | -->
-<!-- | 模块 B 相关关键词 | `path/to/module-b/BLACKBOARD.md` | -->
+| 任务关键词 | 局部黑板 | 模块 |
+| ---------- | -------- | ---- |
+| design / product / touchcli / 产品 | `DESIGN.md` | TouchCLI 产品定位与场景 |
+| agent / framework / 白蚁 / 协议 | `AGENTS.md` | Agent 开发与协议执行 |
+| protocol / termite / 规范 | `TERMITE_PROTOCOL.md` | 完整协议规范 + 术语表 |
+| script / 场基础设施 / field-* | `scripts/` | 场生命周期工具 |
+| signal / 信号 / pheromone | `signals/` + `BLACKBOARD.md` | 信息素与观察层 |
+| config / 配置 / 分支 / governance | `CLAUDE.md` | 项目配置 + 分支治理 |
 
 ## 验证清单
 
@@ -103,6 +106,9 @@
 | SQLite 数据库 | `sqlite3 .termite.db ".tables"` 返回预期的表结构 |
 | 信号导出 | `.termite.db` 的 active 信号与 `signals/active/` 快照同步 |
 | Git 状态 | `git status` 干净，无未提交的 .md 文件删除 |
+| **TouchCLI 设计** | `DESIGN.md` 完整，用户场景覆盖 B2B/B2C/移动端 |
+| **Agent 实现** | `AGENTS.md` 与 `DESIGN.md` 场景一一对应，规则已注入 `.birth` |
+| **端到端架构** | SalesTouch 存量功能 → TouchCLI 对话流转换，无功能衰减 |
 
 ## Build / Test / Dev Commands
 
