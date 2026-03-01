@@ -76,7 +76,7 @@ class CustomerResponse(BaseModel):
     phone: Optional[str]
     assigned_to: Optional[UUID]
     tags: List[str]
-    metadata: Dict[str, Any]
+    metadata: Dict[str, Any] = Field(alias="metadata_json")
     created_at: datetime
     updated_at: datetime
 
@@ -130,7 +130,7 @@ class OpportunityResponse(BaseModel):
     status: str
     probability: float
     expected_close_date: Optional[datetime]
-    metadata: Dict[str, Any]
+    metadata: Dict[str, Any] = Field(alias="metadata_json")
     created_at: datetime
     updated_at: datetime
 

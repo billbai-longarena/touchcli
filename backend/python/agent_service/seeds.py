@@ -72,7 +72,7 @@ def create_test_data(db: Session):
             phone="555-1000",
             company="Acme Corp",
             industry="Software",
-            metadata={"tier": "enterprise", "location": "San Francisco"},
+            metadata_json={"tier": "enterprise", "location": "San Francisco"},
         ),
         Customer(
             id=uuid4(),
@@ -81,7 +81,7 @@ def create_test_data(db: Session):
             phone="555-1001",
             company="TechStart",
             industry="AI/ML",
-            metadata={"tier": "growth", "location": "Austin, TX"},
+            metadata_json={"tier": "growth", "location": "Austin, TX"},
         ),
         Customer(
             id=uuid4(),
@@ -90,7 +90,7 @@ def create_test_data(db: Session):
             phone="555-1002",
             company="Global Finance",
             industry="Financial Services",
-            metadata={"tier": "enterprise", "location": "New York"},
+            metadata_json={"tier": "enterprise", "location": "New York"},
         ),
     ]
     
@@ -108,7 +108,7 @@ def create_test_data(db: Session):
             value=150000.00,
             close_date=datetime.utcnow() + timedelta(days=30),
             notes="Multi-year partnership. High priority.",
-            metadata={"deal_size": "large", "contact": "John Doe"},
+            metadata_json={"deal_size": "large", "contact": "John Doe"},
         ),
         Opportunity(
             id=uuid4(),
@@ -118,7 +118,7 @@ def create_test_data(db: Session):
             value=45000.00,
             close_date=datetime.utcnow() + timedelta(days=14),
             notes="Custom API development for data pipeline.",
-            metadata={"deal_size": "medium", "contact": "Sarah Chen"},
+            metadata_json={"deal_size": "medium", "contact": "Sarah Chen"},
         ),
         Opportunity(
             id=uuid4(),
@@ -128,7 +128,7 @@ def create_test_data(db: Session):
             value=25000.00,
             close_date=datetime.utcnow() + timedelta(days=60),
             notes="Initial discovery call scheduled for next week.",
-            metadata={"deal_size": "small", "contact": "Michael Lee"},
+            metadata_json={"deal_size": "small", "contact": "Michael Lee"},
         ),
     ]
     
@@ -148,7 +148,7 @@ def create_test_data(db: Session):
             type="sales",
             locale=users[0].preferred_locale,
             status="active",
-            metadata={"agent_count": 3, "context": "Follow-up on proposal", "locale": users[0].preferred_locale},
+            metadata_json={"agent_count": 3, "context": "Follow-up on proposal", "locale": users[0].preferred_locale},
         ),
         Conversation(
             id=uuid4(),
@@ -160,7 +160,7 @@ def create_test_data(db: Session):
             type="sales",
             locale=users[1].preferred_locale,
             status="active",
-            metadata={"agent_count": 2, "context": "API integration scope", "locale": users[1].preferred_locale},
+            metadata_json={"agent_count": 2, "context": "API integration scope", "locale": users[1].preferred_locale},
         ),
     ]
     
@@ -176,7 +176,7 @@ def create_test_data(db: Session):
             sender="user",
             content="Hi, I'd like to discuss the licensing terms for your platform.",
             role="user",
-            metadata={"sentiment": "neutral"},
+            metadata_json={"sentiment": "neutral"},
         ),
         Message(
             id=uuid4(),
@@ -184,7 +184,7 @@ def create_test_data(db: Session):
             sender="agent",
             content="I'd be happy to help! Let me pull up the standard enterprise licensing options for you. Are you interested in 1-year or multi-year terms?",
             role="assistant",
-            metadata={"agent": "sales_agent", "confidence": 0.95},
+            metadata_json={"agent": "sales_agent", "confidence": 0.95},
         ),
         Message(
             id=uuid4(),
@@ -192,7 +192,7 @@ def create_test_data(db: Session):
             sender="user",
             content="Can you explain the API rate limits?",
             role="user",
-            metadata={"sentiment": "neutral"},
+            metadata_json={"sentiment": "neutral"},
         ),
         Message(
             id=uuid4(),
@@ -200,7 +200,7 @@ def create_test_data(db: Session):
             sender="agent",
             content="Our API supports 10,000 requests per minute on the enterprise plan. Would you like to see performance benchmarks?",
             role="assistant",
-            metadata={"agent": "data_agent", "confidence": 0.98},
+            metadata_json={"agent": "data_agent", "confidence": 0.98},
         ),
     ]
     

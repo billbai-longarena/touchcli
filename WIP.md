@@ -1,8 +1,8 @@
-# Work In Progress - Session 5 Handoff
+# Work In Progress - Session 6: Task 3.6 Kickoff
 
-**Status**: Task 3.5 (Customer/Opportunity Dashboard) ✅ COMPLETE
-**Time**: 2026-03-02 Session 5 (Verified & Ready for Testing)
-**Progress**: 5/7 Phase 3 tasks complete (71% Phase 3), Task 3.5 fully implemented and tested
+**Status**: Task 3.6 (Testing & CI/CD) 🔨 IN PROGRESS (Day 1/5)
+**Time**: 2026-03-02 Session 6 (Worker - Unit Test Foundation)
+**Progress**: 5/7 Phase 3 complete, Task 3.6 implementation started
 
 ---
 
@@ -212,9 +212,54 @@ Estimated Completion: ~1 week for full Phase 3 (Task 3.6 testing + 3.7 deploymen
 
 ---
 
+## ⏳ Task 3.6: Testing & CI/CD (IN PROGRESS)
+
+### Session 6 Day 1 Progress (Unit Test Foundation)
+
+**Completed**:
+1. ✅ Installed Vitest + dependencies
+   - vitest, @vitest/ui, jsdom
+   - @testing-library/react, @testing-library/jest-dom
+   - @vitest/coverage-v8
+
+2. ✅ Created test infrastructure
+   - vitest.config.ts (configured with coverage targets)
+   - src/setup.ts (test environment setup with mocks)
+   - src/test-utils.tsx (custom render + mock factories)
+
+3. ✅ Wrote authStore unit tests (9 tests)
+   - setUser action + isAuthenticated flag
+   - setToken action
+   - clearError action
+   - logout action
+   - login async action (with mock fetch)
+   - **Status**: All 9 tests passing ✓
+
+### Still Needed (Days 2-5)
+
+**Day 2-3 (Component Tests)**:
+- CreateOpportunityModal tests (form validation, submission)
+- CreateCustomerModal tests (fix existing failures)
+- OpportunityDetailModal tests
+- Modal integration with Zustand store
+
+**Day 3-4 (E2E Tests)**:
+- Set up Playwright configuration
+- Customer flow E2E tests
+- Opportunity flow E2E tests
+- Conversation flow E2E tests
+
+**Day 4-5 (CI/CD + Polish)**:
+- GitHub Actions workflows (frontend-tests.yml, e2e-tests.yml)
+- Pre-commit hooks (husky + lint-staged)
+- Coverage reporting integration
+- Code quality enforcement
+
 ## 💾 Uncommitted Changes
 
-None. All work committed (ba22922 - Complete Task 3.5 detail modals and customer creation).
+- src/store/__tests__/authStore.test.ts (NEW, 110 lines)
+- src/test-utils.tsx (NEW, 90 lines)
+- WIP.md (UPDATED - Task 3.6 progress)
 
 ## 🔐 Blockers
 

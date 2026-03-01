@@ -273,7 +273,7 @@ async def create_conversation(
         opportunity_id=req.opportunity_id,
         mode=req.mode,
         locale=resolved_locale,
-        metadata={"locale": resolved_locale},
+        metadata_json={"locale": resolved_locale},
     )
     db.add(conversation)
     db.commit()
@@ -466,7 +466,7 @@ async def create_opportunity(
         status=req.status,
         probability=req.probability,
         expected_close_date=req.expected_close_date,
-        metadata=req.metadata
+        metadata_json=req.metadata
     )
     db.add(opportunity)
     db.commit()
@@ -527,7 +527,9 @@ async def create_customer(
     db: Session = Depends(get_db)
 ):
     """Create a customer"""
-    customer = Customer(**req.dict())
+    payload = req.dict()
+    payload["metadata_json"] = payload.pop("metadata", {})
+    customer = Customer(**payload)
     db.add(customer)
     db.commit()
     db.refresh(customer)
