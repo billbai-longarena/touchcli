@@ -27,12 +27,15 @@
 | Tests     | not configured (no test harness detected) | stable | 2026-03-02 |
 | Next Phase | 🔴 **Implementation** (Phase 1-5) | ⏳ waiting for Worker | Ready |
 
-## Signals
+## Signals (5 Active)
 
 | ID | Type | Title | Weight | TTL | Status | Owner | Source |
 |----|------|-------|--------|-----|--------|-------|--------|
-| S-002 | IMPLEMENT | Backend scaffold & Agent framework (Python/Go + LangGraph + PostgreSQL+pgvector) | 50 | 21d | open | worker-needed | emergent |
-| S-001 | EXPLORE | Map unknown project — verify build, test, document structure | 31 | 14d | open | unassigned | autonomous |
+| S-003 | HOLE | Phase 2: Backend Infrastructure (Go Gateway + LangGraph) | 55 | 30d | open | unassigned | scout-strategic |
+| S-002 | IMPLEMENT | Phase 1: Backend scaffold & Agent framework (Python/Go + LangGraph + PostgreSQL+pgvector) | 49 | 21d | open | worker-needed | emergent |
+| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition | 35 | 21d | open | unassigned | scout-decision |
+| S-001 | EXPLORE | Map unknown project — verify build, test, document structure | 30 | 14d | open | unassigned | autonomous |
+| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 25 | 21d | open | unassigned | scout-decision |
 
 ## Emerged Rules
 
@@ -47,13 +50,21 @@
 
 ## Notes for AI
 
-- **Phase Transition**: Foundation Genesis → Worker Implementation (Rule R-001 emerged)
-- **S-001 Status**: Scout EXPLORE complete, weight decay in progress, will archive when weight ≤ 20
-- **S-002 Ready**: Worker-assigned IMPLEMENT task, weight=50, next phases clearly defined
-- Use `./scripts/field-arrive.sh` as entrypoint for each session.
-- Keep DB-first flow; treat `signals/active/*.yaml` as snapshots.
-- If adding CI, start with shell validation (`bash -n`, then `shellcheck` where available).
-- Next caste (Worker): Backend implementation. Can claim S-002 when arriving.
+- **Phase Transition**: Foundation Genesis → Worker Implementation (Rule R-001 emerged, active in .birth)
+- **DECISIONS.md**: Strategic planning complete (5 Phase breakdown, 12-16 week timeline, 8 core decisions + 2 EXPLORE items)
+- **Signal Hierarchy**:
+  - S-003 (w:55, HOLE) — Phase 2, depends on S-002 completion
+  - S-002 (w:49, IMPLEMENT) — Phase 1, priority for Worker caste
+  - S-005 (w:35, PROBE) — Performance SLA research (medium priority)
+  - S-001 (w:30, EXPLORE) — Genesis EXPLORE, decaying, archive when w≤20
+  - S-004 (w:25, PROBE) — i18n research (low priority)
+- **Scout Completions**:
+  1. Foundation Genesis verified (4 Scout sessions, Rule R-001 emerged)
+  2. DECISIONS.md with 5-phase strategic plan
+  3. S-002/S-003 phase task signals created
+  4. S-004/S-005 research exploration signals created
+- **Data Consistency**: All signals now synced to .termite.db (S-003 fixed from YAML)
+- **Next caste (Worker)**: Claim S-002 IMPLEMENT, execute Phase 1 backend scaffold
 
 ## Known Limitations
 

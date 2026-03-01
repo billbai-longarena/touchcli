@@ -1,0 +1,16 @@
+# READ-ONLY — auto-exported from .termite.db
+# Generated: 2026-03-02T01:30:00Z by Scout (decision follow-up)
+id: S-004
+type: PROBE
+title: "EXPLORE: Internationalization & Multi-language Support Architecture"
+status: open
+weight: 25
+ttl_days: 21
+created: 2026-03-02T01:30:00Z
+last_touched: 2026-03-02T01:30:00Z
+owner: unassigned
+module: "research"
+tags: [i18n, explore, low-priority]
+next: "Define when to introduce i18n, Agent-level language handling, frontend-backend i18n split"
+source: scout-decision-follow-up
+touch_count: 0
