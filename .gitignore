@@ -14,3 +14,5 @@ audit-package-*
 # Local machine and secret files
 .env
 .DS_Store
+__pycache__/
+*.pyc

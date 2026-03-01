@@ -6,15 +6,29 @@ Phase 2: Backend Infrastructure Implementation
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
+from sqlalchemy import desc
 import os
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
+from datetime import datetime
+import logging
 
-# Import from local modules (to be implemented)
-# from .db import get_db, SessionLocal, engine
-# from .schemas import ConversationCreate, MessageCreate
-# from .models import Conversation, Message, User
-# from .router import AgentRouter
+# Import from local modules
+from agent_service.db import get_db, engine, init_db, get_db_health
+from agent_service.models import (
+    Base, User, Customer, Opportunity, Conversation, Message, AgentState, ActivityLog
+)
+from agent_service.schemas import (
+    ConversationCreate, ConversationResponse, MessageCreate, MessageResponse,
+    CustomerCreate, CustomerResponse, OpportunityCreate, OpportunityResponse,
+    HealthCheckResponse, ComponentHealth
+)
+
+# Configure logging
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="TouchCLI Agent Service",
@@ -43,52 +57,68 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 # Health Check
 # ============================================================================
 
-@app.get("/health")
-async def health_check():
+@app.get("/health", response_model=HealthCheckResponse)
+async def health_check(db: Session = Depends(get_db)):
     """
     Health check endpoint for load balancers and orchestration.
 
     Returns:
-        - status: "ok" or "degraded"
-        - database: "ok" or "error"
-        - cache: "ok" or "error"
+        - status: "ok", "degraded", or "unhealthy"
+        - version, timestamp
+        - checks: database, agent_service, cache status
     """
-    db_ok = True
+    import time
+
+    db_health = await get_db_health()
+
+    # Check cache (Redis) - for now simplified
     redis_ok = True
+    try:
+        # TODO: Implement actual Redis health check when Redis is available
+        pass
+    except Exception as e:
+        logger.error(f"Redis health check failed: {e}")
+        redis_ok = False
 
-    # TODO: Implement actual database health check
-    # try:
-    #     db = SessionLocal()
-    #     db.execute("SELECT 1")
-    #     db_ok = True
-    # except:
-    #     db_ok = False
-    # finally:
-    #     db.close()
+    # Determine overall status
+    overall_status = "ok"
+    if db_health["status"] == "error" or not redis_ok:
+        overall_status = "unhealthy"
+    elif db_health["status"] == "degraded":
+        overall_status = "degraded"
 
-    # TODO: Implement actual Redis health check
-    # try:
-    #     redis_client.ping()
-    #     redis_ok = True
-    # except:
-    #     redis_ok = False
-
-    status_code = "ok" if (db_ok and redis_ok) else "degraded"
-
-    return {
-        "status": status_code,
-        "database": "ok" if db_ok else "error",
-        "cache": "ok" if redis_ok else "error"
-    }
+    return HealthCheckResponse(
+        status=overall_status,
+        timestamp=datetime.utcnow(),
+        version="1.0.0",
+        checks={
+            "database": ComponentHealth(
+                status=db_health["status"],
+                latency_ms=db_health.get("latency_ms"),
+                last_checked=datetime.fromisoformat(db_health["last_checked"].replace("Z", "+00:00"))
+            ),
+            "agent_service": ComponentHealth(
+                status="ok",
+                latency_ms=0,
+                last_checked=datetime.utcnow()
+            ),
+            "cache": ComponentHealth(
+                status="ok" if redis_ok else "error",
+                latency_ms=None,
+                last_checked=datetime.utcnow()
+            )
+        }
+    )
 
 # ============================================================================
 # Conversation Endpoints
 # ============================================================================
 
-@app.post("/conversations")
+@app.post("/conversations", response_model=ConversationResponse, status_code=201)
 async def create_conversation(
-    customer_id: Optional[str] = None,
-    opportunity_id: Optional[str] = None
+    req: ConversationCreate,
+    db: Session = Depends(get_db),
+    user_id: Optional[UUID] = None  # TODO: Extract from JWT token
 ):
     """
     Start a new conversation.
@@ -98,26 +128,44 @@ async def create_conversation(
         opportunity_id: Optional opportunity UUID for context
 
     Returns:
-        - id: Conversation UUID
-        - user_id: Current user UUID
-        - started_at: ISO 8601 timestamp
+        Conversation object with metadata
     """
-    # TODO: Implement conversation creation
-    # 1. Get authenticated user from token
-    # 2. Create conversation in DB
-    # 3. Initialize Agent Router checkpoint
-    # 4. Store in Redis session
+    if not user_id:
+        # For now, use a placeholder user_id
+        # TODO: Extract from JWT token in Authorization header
+        raise HTTPException(status_code=401, detail="Unauthorized - missing JWT token")
 
-    return {
-        "id": "conv-placeholder",
-        "user_id": "user-placeholder",
-        "customer_id": customer_id,
-        "opportunity_id": opportunity_id,
-        "started_at": "2026-03-02T12:00:00Z"
-    }
+    # Validate customer_id and opportunity_id if provided
+    if req.customer_id:
+        customer = db.query(Customer).filter(Customer.id == req.customer_id).first()
+        if not customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
 
-@app.get("/conversations/{conversation_id}")
-async def get_conversation(conversation_id: str):
+    if req.opportunity_id:
+        opportunity = db.query(Opportunity).filter(Opportunity.id == req.opportunity_id).first()
+        if not opportunity:
+            raise HTTPException(status_code=404, detail="Opportunity not found")
+
+    # Create conversation
+    conversation = Conversation(
+        user_id=user_id,
+        customer_id=req.customer_id,
+        opportunity_id=req.opportunity_id,
+        mode=req.mode
+    )
+    db.add(conversation)
+    db.commit()
+    db.refresh(conversation)
+
+    logger.info(f"Created conversation {conversation.id} for user {user_id}")
+    return conversation
+
+
+@app.get("/conversations/{conversation_id}", response_model=ConversationResponse)
+async def get_conversation(
+    conversation_id: UUID,
+    db: Session = Depends(get_db)
+):
     """
     Fetch conversation metadata.
 
@@ -127,25 +175,21 @@ async def get_conversation(conversation_id: str):
     Returns:
         Conversation object with metadata
     """
-    # TODO: Implement conversation fetch
+    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
 
-    return {
-        "id": conversation_id,
-        "user_id": "user-placeholder",
-        "started_at": "2026-03-02T12:00:00Z",
-        "summary_text": None,
-        "agent_states": {}
-    }
+    return conversation
 
 # ============================================================================
 # Message Endpoints
 # ============================================================================
 
-@app.post("/messages")
+@app.post("/messages", status_code=202)
 async def send_message(
-    conversation_id: str,
-    content: str,
-    attachments: Optional[list] = None
+    req: MessageCreate,
+    db: Session = Depends(get_db),
+    sender_id: Optional[UUID] = None  # TODO: Extract from JWT token
 ):
     """
     Send message and trigger Agent processing.
@@ -157,25 +201,46 @@ async def send_message(
 
     Returns:
         - message_id: New message UUID
-        - task_id: Async task ID for polling progress
+        - task_id: Async task ID for polling progress (TODO: implement with Celery)
     """
-    # TODO: Implement message handling
-    # 1. Create message record in DB
-    # 2. Queue Agent processing task (Celery/BullMQ)
-    # 3. Return task_id for polling
+    # Validate conversation exists
+    conversation = db.query(Conversation).filter(Conversation.id == req.conversation_id).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # Create message
+    message = Message(
+        conversation_id=req.conversation_id,
+        sender_id=sender_id,
+        sender_role="user",
+        content=req.content,
+        content_type=req.content_type,
+        attachments=req.attachments or []
+    )
+    db.add(message)
+    db.commit()
+    db.refresh(message)
+
+    logger.info(f"Created message {message.id} in conversation {req.conversation_id}")
+
+    # TODO: Queue Agent processing task via Celery
+    # task = process_message.delay(str(message.id), str(conversation.id), req.content)
+    # task_id = task.id
 
     return {
-        "status": 202,
-        "message_id": "msg-placeholder",
-        "task_id": "task-placeholder",
-        "message": "Processing..."
+        "message_id": str(message.id),
+        "task_id": "placeholder-task-id",  # TODO: Replace with Celery task ID
+        "status": "processing",
+        "message": "Message received, Agent processing started"
     }
+
 
 @app.get("/conversations/{conversation_id}/messages")
 async def get_messages(
-    conversation_id: str,
+    conversation_id: UUID,
     limit: int = 50,
-    offset: int = 0
+    offset: int = 0,
+    db: Session = Depends(get_db)
 ):
     """
     Fetch conversation message history.
@@ -190,11 +255,23 @@ async def get_messages(
         - total: Total message count
         - limit, offset: Pagination info
     """
-    # TODO: Implement message fetch with pagination
+    # Validate conversation exists
+    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # Get total count
+    total = db.query(Message).filter(Message.conversation_id == conversation_id).count()
+
+    # Fetch messages with pagination
+    limit = min(limit, 500)  # Cap at 500
+    messages = db.query(Message).filter(
+        Message.conversation_id == conversation_id
+    ).order_by(desc(Message.created_at)).offset(offset).limit(limit).all()
 
     return {
-        "messages": [],
-        "total": 0,
+        "messages": [MessageResponse.model_validate(m, from_attributes=True) for m in messages],
+        "total": total,
         "offset": offset,
         "limit": limit
     }
@@ -203,55 +280,62 @@ async def get_messages(
 # Opportunity Endpoints
 # ============================================================================
 
-@app.post("/opportunities")
-async def upsert_opportunity(
-    id: Optional[str] = None,
-    customer_id: str = None,
-    name: str = None,
-    amount: float = None,
-    stage: Optional[str] = None,
-    expected_close_date: Optional[str] = None
+@app.post("/opportunities", response_model=OpportunityResponse, status_code=201)
+async def create_opportunity(
+    req: OpportunityCreate,
+    db: Session = Depends(get_db)
 ):
     """
     Create or update opportunity.
 
     Args:
-        id: Opportunity UUID (if updating)
         customer_id: Customer UUID (required)
         name: Opportunity name (required)
         amount: Deal amount (required)
-        stage: sales stage (discovery, proposal, etc.)
-        expected_close_date: YYYY-MM-DD format
+        status: sales stage (discovery, proposal, etc.)
+        expected_close_date: ISO 8601 format
 
     Returns:
-        Created/updated opportunity object
+        Created opportunity object
     """
-    # TODO: Implement opportunity upsert
+    # Validate customer exists
+    customer = db.query(Customer).filter(Customer.id == req.customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
 
-    return {
-        "id": id or "opp-placeholder",
-        "customer_id": customer_id,
-        "name": name,
-        "amount": amount,
-        "stage": stage,
-        "expected_close_date": expected_close_date,
-        "created_at": "2026-03-02T12:00:00Z"
-    }
+    # Create opportunity
+    opportunity = Opportunity(
+        customer_id=req.customer_id,
+        name=req.name,
+        description=req.description,
+        amount=req.amount,
+        currency=req.currency,
+        status=req.status,
+        probability=req.probability,
+        expected_close_date=req.expected_close_date,
+        metadata=req.metadata
+    )
+    db.add(opportunity)
+    db.commit()
+    db.refresh(opportunity)
+
+    logger.info(f"Created opportunity {opportunity.id} for customer {req.customer_id}")
+    return opportunity
+
 
 @app.get("/opportunities")
 async def list_opportunities(
-    stage: Optional[str] = None,
-    owner_id: Optional[str] = None,
-    customer_id: Optional[str] = None,
+    status: Optional[str] = None,
+    customer_id: Optional[UUID] = None,
     limit: int = 50,
-    offset: int = 0
+    offset: int = 0,
+    db: Session = Depends(get_db)
 ):
     """
     Query opportunities with filters.
 
     Args:
-        stage: Filter by sales stage
-        owner_id: Filter by owner
+        status: Filter by sales stage
         customer_id: Filter by customer
         limit, offset: Pagination
 
@@ -259,42 +343,56 @@ async def list_opportunities(
         - opportunities: List of Opportunity objects
         - total: Total matching count
     """
-    # TODO: Implement opportunity query
+    query = db.query(Opportunity)
+
+    if status:
+        query = query.filter(Opportunity.status == status)
+
+    if customer_id:
+        query = query.filter(Opportunity.customer_id == customer_id)
+
+    total = query.count()
+
+    # Pagination
+    limit = min(limit, 500)  # Cap at 500
+    opportunities = query.offset(offset).limit(limit).all()
 
     return {
-        "opportunities": [],
-        "total": 0,
+        "opportunities": [OpportunityResponse.model_validate(o, from_attributes=True) for o in opportunities],
+        "total": total,
         "offset": offset,
         "limit": limit
     }
 
 # ============================================================================
-# User Endpoints
+# Customer Endpoints
 # ============================================================================
 
-@app.get("/users/{user_id}")
-async def get_user(user_id: str):
-    """
-    Fetch user profile.
+@app.post("/customers", response_model=CustomerResponse, status_code=201)
+async def create_customer(
+    req: CustomerCreate,
+    db: Session = Depends(get_db)
+):
+    """Create a customer"""
+    customer = Customer(**req.dict())
+    db.add(customer)
+    db.commit()
+    db.refresh(customer)
+    logger.info(f"Created customer {customer.id}")
+    return customer
 
-    Args:
-        user_id: User UUID
 
-    Returns:
-        User object
-    """
-    # TODO: Implement user fetch
+@app.get("/customers/{customer_id}", response_model=CustomerResponse)
+async def get_customer(customer_id: UUID, db: Session = Depends(get_db)):
+    """Get customer by ID"""
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return customer
 
-    return {
-        "id": user_id,
-        "email": "user@example.com",
-        "name": "Placeholder User",
-        "role": "salesperson",
-        "created_at": "2026-01-01T00:00:00Z"
-    }
 
 # ============================================================================
-# Task Status Endpoint
+# Task Status Endpoint (for Celery async tasks)
 # ============================================================================
 
 @app.get("/tasks/{task_id}")
@@ -311,10 +409,9 @@ async def get_task_status(task_id: str):
         - error: Error message if failed
     """
     # TODO: Implement task polling (Celery/BullMQ)
-
     return {
         "task_id": task_id,
-        "status": "pending",
+        "status": "processing",
         "result": None,
         "error": None
     }
@@ -354,19 +451,34 @@ async def general_exception_handler(request, exc):
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup."""
-    # TODO: Initialize database
+    logger.info("Initializing TouchCLI Agent Service...")
+
+    # Initialize database tables
+    try:
+        init_db()
+        logger.info("Database tables initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        raise
+
     # TODO: Initialize Redis connection
     # TODO: Initialize LangGraph Router
     # TODO: Start Celery worker
-    print("TouchCLI Agent Service started")
+
+    logger.info("TouchCLI Agent Service startup complete")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown."""
-    # TODO: Close database connections
+    logger.info("Shutting down TouchCLI Agent Service...")
+
+    # TODO: Close database connections (handled by engine.dispose())
     # TODO: Close Redis connections
     # TODO: Shutdown Celery worker gracefully
-    print("TouchCLI Agent Service shutdown")
+
+    engine.dispose()
+    logger.info("TouchCLI Agent Service shutdown complete")
 
 if __name__ == "__main__":
     import uvicorn
