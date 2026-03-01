@@ -15,17 +15,31 @@ from uuid import UUID
 from datetime import datetime
 import logging
 
-# Import from local modules
-from agent_service.db import get_db, engine, init_db, get_db_health
-from agent_service.models import (
-    Base, User, Customer, Opportunity, Conversation, Message, AgentState, ActivityLog
-)
-from agent_service.schemas import (
-    ConversationCreate, ConversationResponse, MessageCreate, MessageResponse,
-    CustomerCreate, CustomerResponse, OpportunityCreate, OpportunityResponse,
-    HealthCheckResponse, ComponentHealth
-)
-from agent_service.workflow import ConversationWorkflow
+# Import from local modules (use relative imports for package)
+try:
+    # When running as module
+    from .db import get_db, engine, init_db, get_db_health
+    from .models import (
+        Base, User, Customer, Opportunity, Conversation, Message, AgentState, ActivityLog
+    )
+    from .schemas import (
+        ConversationCreate, ConversationResponse, MessageCreate, MessageResponse,
+        CustomerCreate, CustomerResponse, OpportunityCreate, OpportunityResponse,
+        HealthCheckResponse, ComponentHealth
+    )
+    from .workflow import ConversationWorkflow
+except ImportError:
+    # Fallback for direct execution
+    from db import get_db, engine, init_db, get_db_health
+    from models import (
+        Base, User, Customer, Opportunity, Conversation, Message, AgentState, ActivityLog
+    )
+    from schemas import (
+        ConversationCreate, ConversationResponse, MessageCreate, MessageResponse,
+        CustomerCreate, CustomerResponse, OpportunityCreate, OpportunityResponse,
+        HealthCheckResponse, ComponentHealth
+    )
+    from workflow import ConversationWorkflow
 
 # Configure logging
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
