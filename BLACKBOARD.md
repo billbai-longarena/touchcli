@@ -34,11 +34,11 @@
 
 | ID | Type | Title | Weight | TTL | Status | Owner | Source |
 |----|------|-------|--------|-----|--------|-------|--------|
-| S-003 | HOLE | Phase 2: ✅ COMPLETE (7 tasks, 3,569 lines, all endpoints + agents + Celery) | 42 | 30d | completed | worker-phase2 | emergent |
-| S-002 | IMPLEMENT | Phase 1: ✅ COMPLETE (schema, API, WebSocket, Redis design) | 39 | 21d | completed | worker-phase1 | emergent |
-| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition (DB + WebSocket probes created) | 24 | 21d | open | unassigned | worker-perf |
+| S-003 | HOLE | Phase 2: ✅ COMPLETE (7 tasks, 3,569 lines, all endpoints + agents + Celery) | 36 | 30d | completed | worker-phase2 | emergent |
+| S-002 | IMPLEMENT | Phase 1: ✅ COMPLETE (schema, API, WebSocket, Redis design) | 33 | 21d | completed | worker-phase1 | emergent |
+| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition (✅ COMPLETE, 10 test suites) | 19 | 21d | completed | worker-perf | emergent |
 | S-001 | EXPLORE | Map unknown project (✅ ARCHIVED per Rule R-001: w≤20) | 17 | 14d | archived | scout | autonomous |
-| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 15 | 21d | open | unassigned | scout-decision |
+| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 11 | 21d | open | unassigned | scout-decision |
 
 ## Emerged Rules
 

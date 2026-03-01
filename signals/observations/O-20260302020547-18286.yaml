@@ -1,4 +1,4 @@
-# READ-ONLY — auto-exported from .termite.db (2026-03-01T18:35:07Z)
+# READ-ONLY — auto-exported from .termite.db (2026-03-01T18:36:01Z)
 # To modify observations, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: O-20260302020547-18286
 pattern: "S-003 CORS hardening: replaced wildcard CORS with env-driven allowlist in FastAPI service"
