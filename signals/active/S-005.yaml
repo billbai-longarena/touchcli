@@ -1,16 +1,16 @@
-# READ-ONLY — auto-exported from .termite.db
-# Generated: 2026-03-02T01:30:00Z by Scout (decision follow-up)
+# READ-ONLY — auto-exported from .termite.db (2026-03-01T17:25:37Z)
+# To modify signals, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: S-005
 type: PROBE
 title: "EXPLORE: Performance Benchmarks & SLA Definition"
 status: open
-weight: 35
+weight: 34
 ttl_days: 21
 created: 2026-03-02T01:30:00Z
 last_touched: 2026-03-02T01:30:00Z
 owner: unassigned
 module: "research"
-tags: [performance, sla, medium-priority]
+tags: ["performance","sla","medium-priority"]
 next: "Agent response time <500ms, WebSocket <100ms, DB <50ms, >1000 concurrent users, 99.5% uptime targets"
-source: scout-decision-follow-up
 touch_count: 0
+source: scout-decision-follow-up

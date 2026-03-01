@@ -1,15 +1,16 @@
+# READ-ONLY — auto-exported from .termite.db (2026-03-01T17:25:37Z)
+# To modify signals, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: S-002
-type: HOLE
-title: "Implement Phase 1: Database & Communication Fundamentals"
+type: IMPLEMENT
+title: "Backend scaffold & Agent framework (Python/Go + LangGraph + PostgreSQL+pgvector)"
 status: open
-weight: 60
-ttl_days: 30
-created: 2026-03-02
-last_touched: 2026-03-02
-owner: unassigned
-module: "touchcli/backend"
-tags: [phase1, schema, api, websocket, redis]
-next: "Define PostgreSQL schema + API spec + WebSocket protocol + Redis keys"
+weight: 48
+ttl_days: 21
+created: 2026-03-02T01:25:00Z
+last_touched: 2026-03-02T01:25:00Z
+owner: worker-needed
+module: "backend"
+tags: ["worker","implementation","backend","agent","database","lob"]
+next: "Phase 1: FastAPI/Gin scaffold. Phase 2: Agent Router + Sales/Data/Strategy agents. Phase 3: PostgreSQL+pgvector setup."
 touch_count: 0
-source: scout-strategic-review
-depends_on: ["S-001"]
+source: emergent
