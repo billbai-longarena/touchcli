@@ -1,1 +1,3 @@
-"""Test suite for TouchCLI Agent Service"""
+"""
+Integration and unit tests for TouchCLI Agent Service
+"""

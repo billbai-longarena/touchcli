@@ -1,251 +1,240 @@
 """
-Database seeding script for development and testing.
-Populates the database with sample data (users, customers, opportunities).
-
-Run with: python -m agent_service.seeds
+Database seeding - Initialize development/testing data
+Usage: python -m agent_service.seeds [--clean]
 """
 
+import asyncio
 import logging
-from datetime import datetime, timedelta
 from uuid import uuid4
-
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
+# Import models
 try:
-    from .db import SessionLocal, engine, init_db
-    from .models import Base, User, Customer, Opportunity, Conversation
+    from .models import Base, User, Customer, Opportunity, Conversation, Message, AgentState
+    from .db import SessionLocal, engine
 except ImportError:
-    from db import SessionLocal, engine, init_db
-    from models import Base, User, Customer, Opportunity, Conversation
+    from models import Base, User, Customer, Opportunity, Conversation, Message, AgentState
+    from db import SessionLocal, engine
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def seed_users(db: Session) -> dict:
-    """Create sample users."""
+def create_test_data(db: Session):
+    """Create sample data for development/testing"""
+    
+    # Check if data already exists
+    existing_users = db.query(User).count()
+    if existing_users > 0:
+        logger.info(f"Database already seeded ({existing_users} users). Skipping.")
+        return
+    
+    logger.info("Creating test data...")
+    
+    # Create test users (sales team)
     users = [
         User(
             id=uuid4(),
-            name="Alice Salesperson",
-            email="alice@touchcli.demo",
+            email="alice.smith@touchcli.local",
+            name="Alice Smith",
             role="salesperson",
-            is_active=True
+            phone_number="+1-555-0101",
         ),
         User(
             id=uuid4(),
-            name="Bob Sales Manager",
-            email="bob@touchcli.demo",
-            role="manager",
-            is_active=True
+            email="bob.johnson@touchcli.local",
+            name="Bob Johnson",
+            role="salesperson",
+            phone_number="+1-555-0102",
         ),
         User(
             id=uuid4(),
-            name="Carol Admin",
-            email="carol@touchcli.demo",
-            role="admin",
-            is_active=True
+            email="carol.martinez@touchcli.local",
+            name="Carol Martinez",
+            role="sales_manager",
+            phone_number="+1-555-0103",
         ),
     ]
-
-    for user in users:
-        existing = db.query(User).filter(User.email == user.email).first()
-        if not existing:
-            db.add(user)
-            logger.info(f"✓ Created user: {user.name} ({user.role})")
-        else:
-            logger.info(f"⊘ User already exists: {user.email}")
-
+    
+    db.add_all(users)
     db.commit()
-
-    # Return dict for reference in other seed functions
-    return {user.email: user for user in users if not db.query(User).filter(User.email == user.email).first()}
-
-
-def seed_customers(db: Session) -> dict:
-    """Create sample customers."""
+    logger.info(f"✓ Created {len(users)} users")
+    
+    # Create test customers
     customers = [
         Customer(
             id=uuid4(),
             name="Acme Corporation",
-            customer_type="company",
-            industry="Technology",
-            email="contact@acme.demo",
-            phone="+1-555-0100",
-            company_size="500-1000",
-            website="https://acme.demo",
-            metadata={"source": "inbound", "priority": "high"}
-        ),
-        Customer(
-            id=uuid4(),
-            name="John Smith",
-            customer_type="individual",
-            industry="Finance",
-            email="john.smith@finance.demo",
-            phone="+1-555-0101",
-            company_size=None,
-            website=None,
-            metadata={"source": "referral", "priority": "medium"}
-        ),
-        Customer(
-            id=uuid4(),
-            name="Tech Innovations Ltd",
-            customer_type="company",
+            email="contact@acme-corp.com",
+            phone="555-1000",
+            company="Acme Corp",
             industry="Software",
-            email="sales@techinnovations.demo",
-            phone="+1-555-0102",
-            company_size="50-100",
-            website="https://techinnovations.demo",
-            metadata={"source": "cold_outreach", "priority": "low"}
+            metadata={"tier": "enterprise", "location": "San Francisco"},
+        ),
+        Customer(
+            id=uuid4(),
+            name="TechStart Inc.",
+            email="sales@techstart.io",
+            phone="555-1001",
+            company="TechStart",
+            industry="AI/ML",
+            metadata={"tier": "growth", "location": "Austin, TX"},
+        ),
+        Customer(
+            id=uuid4(),
+            name="Global Finance Ltd.",
+            email="partnerships@globalfinance.com",
+            phone="555-1002",
+            company="Global Finance",
+            industry="Financial Services",
+            metadata={"tier": "enterprise", "location": "New York"},
         ),
     ]
-
-    for customer in customers:
-        existing = db.query(Customer).filter(Customer.email == customer.email).first()
-        if not existing:
-            db.add(customer)
-            logger.info(f"✓ Created customer: {customer.name}")
-        else:
-            logger.info(f"⊘ Customer already exists: {customer.email}")
-
+    
+    db.add_all(customers)
     db.commit()
-
-    return {customer.email: customer for customer in customers}
-
-
-def seed_opportunities(db: Session, customers: dict) -> dict:
-    """Create sample opportunities linked to customers."""
-    opportunities = []
-
-    for email, customer in customers.items():
-        opps = [
-            Opportunity(
-                id=uuid4(),
-                customer_id=customer.id,
-                name=f"Enterprise Solution - {customer.name}",
-                description=f"Custom enterprise solution implementation",
-                amount=50000.00,
-                currency="USD",
-                status="discovery",
-                probability=0.3,
-                expected_close_date=datetime.utcnow() + timedelta(days=60),
-                metadata={"deal_type": "new", "decision_maker": "CEO"}
-            ),
-            Opportunity(
-                id=uuid4(),
-                customer_id=customer.id,
-                name=f"Expansion - {customer.name}",
-                description=f"Expansion of existing services",
-                amount=25000.00,
-                currency="USD",
-                status="proposal",
-                probability=0.6,
-                expected_close_date=datetime.utcnow() + timedelta(days=30),
-                metadata={"deal_type": "expansion", "decision_maker": "CTO"}
-            ),
-        ]
-        opportunities.extend(opps)
-
-    for opp in opportunities:
-        existing = db.query(Opportunity).filter(
-            Opportunity.customer_id == opp.customer_id,
-            Opportunity.name == opp.name
-        ).first()
-        if not existing:
-            db.add(opp)
-            logger.info(f"✓ Created opportunity: {opp.name} (${opp.amount:,.2f})")
-        else:
-            logger.info(f"⊘ Opportunity already exists: {opp.name}")
-
+    logger.info(f"✓ Created {len(customers)} customers")
+    
+    # Create opportunities
+    opportunities = [
+        Opportunity(
+            id=uuid4(),
+            customer_id=customers[0].id,
+            title="Enterprise Platform License - Year 1",
+            stage="negotiation",
+            value=150000.00,
+            close_date=datetime.utcnow() + timedelta(days=30),
+            notes="Multi-year partnership. High priority.",
+            metadata={"deal_size": "large", "contact": "John Doe"},
+        ),
+        Opportunity(
+            id=uuid4(),
+            customer_id=customers[1].id,
+            title="API Integration Services",
+            stage="proposal",
+            value=45000.00,
+            close_date=datetime.utcnow() + timedelta(days=14),
+            notes="Custom API development for data pipeline.",
+            metadata={"deal_size": "medium", "contact": "Sarah Chen"},
+        ),
+        Opportunity(
+            id=uuid4(),
+            customer_id=customers[2].id,
+            title="Compliance & Security Audit",
+            stage="prospecting",
+            value=25000.00,
+            close_date=datetime.utcnow() + timedelta(days=60),
+            notes="Initial discovery call scheduled for next week.",
+            metadata={"deal_size": "small", "contact": "Michael Lee"},
+        ),
+    ]
+    
+    db.add_all(opportunities)
     db.commit()
-
-    return {opp.name: opp for opp in opportunities}
-
-
-def seed_conversations(db: Session, users: dict, customers: dict, opportunities: dict) -> None:
-    """Create sample conversations for testing."""
-    # Get first user (Alice) for conversations
-    alice = db.query(User).filter(User.email == "alice@touchcli.demo").first()
-    if not alice:
-        logger.warning("⊘ Alice user not found, skipping conversations")
-        return
-
-    # Get first customer and opportunity
-    first_customer = next(iter(customers.values())) if customers else None
-    first_opp = next(iter(opportunities.values())) if opportunities else None
-
-    if not first_customer:
-        logger.warning("⊘ No customers found, skipping conversations")
-        return
-
+    logger.info(f"✓ Created {len(opportunities)} opportunities")
+    
+    # Create conversations
     conversations = [
         Conversation(
             id=uuid4(),
-            user_id=alice.id,
-            customer_id=first_customer.id,
-            opportunity_id=first_opp.id if first_opp else None,
-            title=f"Discovery call - {first_customer.name}",
+            user_id=users[0].id,
+            customer_id=customers[0].id,
+            opportunity_id=opportunities[0].id,
+            title="Enterprise deal discussion",
             type="sales",
             status="active",
-            metadata={"started_by": "alice", "channel": "phone"}
+            metadata={"agent_count": 3, "context": "Follow-up on proposal"},
+        ),
+        Conversation(
+            id=uuid4(),
+            user_id=users[1].id,
+            customer_id=customers[1].id,
+            opportunity_id=opportunities[1].id,
+            title="Technical requirements gathering",
+            type="sales",
+            status="active",
+            metadata={"agent_count": 2, "context": "API integration scope"},
         ),
     ]
-
-    for conv in conversations:
-        existing = db.query(Conversation).filter(
-            Conversation.user_id == conv.user_id,
-            Conversation.customer_id == conv.customer_id,
-            Conversation.title == conv.title
-        ).first()
-        if not existing:
-            db.add(conv)
-            logger.info(f"✓ Created conversation: {conv.title}")
-        else:
-            logger.info(f"⊘ Conversation already exists: {conv.title}")
-
+    
+    db.add_all(conversations)
     db.commit()
+    logger.info(f"✓ Created {len(conversations)} conversations")
+    
+    # Create sample messages
+    messages = [
+        Message(
+            id=uuid4(),
+            conversation_id=conversations[0].id,
+            sender="user",
+            content="Hi, I'd like to discuss the licensing terms for your platform.",
+            role="user",
+            metadata={"sentiment": "neutral"},
+        ),
+        Message(
+            id=uuid4(),
+            conversation_id=conversations[0].id,
+            sender="agent",
+            content="I'd be happy to help! Let me pull up the standard enterprise licensing options for you. Are you interested in 1-year or multi-year terms?",
+            role="assistant",
+            metadata={"agent": "sales_agent", "confidence": 0.95},
+        ),
+        Message(
+            id=uuid4(),
+            conversation_id=conversations[1].id,
+            sender="user",
+            content="Can you explain the API rate limits?",
+            role="user",
+            metadata={"sentiment": "neutral"},
+        ),
+        Message(
+            id=uuid4(),
+            conversation_id=conversations[1].id,
+            sender="agent",
+            content="Our API supports 10,000 requests per minute on the enterprise plan. Would you like to see performance benchmarks?",
+            role="assistant",
+            metadata={"agent": "data_agent", "confidence": 0.98},
+        ),
+    ]
+    
+    db.add_all(messages)
+    db.commit()
+    logger.info(f"✓ Created {len(messages)} messages")
+    
+    logger.info("✅ Database seeding complete!")
 
 
-def seed_database():
-    """Run all seeding functions."""
-    logger.info("Starting database seeding...")
+def clean_database():
+    """Drop all tables and recreate schema"""
+    logger.warning("Dropping all tables...")
+    Base.metadata.drop_all(bind=engine)
+    logger.warning("Creating fresh schema...")
+    Base.metadata.create_all(bind=engine)
+    logger.info("✅ Database cleaned and recreated")
 
-    # Initialize tables
-    try:
-        init_db()
-        logger.info("✓ Database tables initialized")
-    except Exception as e:
-        logger.warning(f"⊘ Database tables may already exist: {e}")
 
+def main():
+    """Seed database with test data"""
+    import sys
+    
+    # Create tables if they don't exist
+    Base.metadata.create_all(bind=engine)
+    
+    # Clean if --clean flag provided
+    if "--clean" in sys.argv:
+        clean_database()
+    
+    # Create test data
     db = SessionLocal()
-
     try:
-        logger.info("\n--- Seeding Users ---")
-        users = seed_users(db)
-        logger.info(f"Completed: {len(users)} users")
-
-        logger.info("\n--- Seeding Customers ---")
-        customers = seed_customers(db)
-        logger.info(f"Completed: {len(customers)} customers")
-
-        logger.info("\n--- Seeding Opportunities ---")
-        opportunities = seed_opportunities(db, customers)
-        logger.info(f"Completed: {len(opportunities)} opportunities")
-
-        logger.info("\n--- Seeding Conversations ---")
-        seed_conversations(db, users, customers, opportunities)
-        logger.info("Completed: conversations")
-
-        logger.info("\n✅ Database seeding completed successfully!")
-
-    except Exception as e:
-        logger.error(f"❌ Seeding failed: {e}", exc_info=True)
-        db.rollback()
-        raise
-
+        create_test_data(db)
     finally:
         db.close()
 
 
 if __name__ == "__main__":
-    seed_database()
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s"
+    )
+    main()
