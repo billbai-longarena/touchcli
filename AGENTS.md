@@ -168,16 +168,26 @@ IF 不可执行:
 
 ## 验证清单
 
-| 改动类型 | 验证方式 |
-| -------- | -------- |
-<!-- | 后端代码 | 构建通过，无报错 | -->
-<!-- | 前端代码 | 构建通过，无报错 | -->
+| 改动类型 | 验证方式 | 说明 |
+| -------- | -------- | ---- |
+| 协议脚本 | `bash -n scripts/field-*.sh` 通过 | shell 语法正确，无语法错误 |
+| 文档一致性 | `grep "termite-kernel:v" *.md` 版本一致 | CLAUDE.md / AGENTS.md / TERMITE_PROTOCOL.md 同版本 |
+| 数据库完整性 | `sqlite3 .termite.db ".tables"` | 包含 signals、observations、rules、claims、agents 等预期表 |
+| 信号导出同步 | `.termite.db` 与 `signals/active/` 无差异 | 快照与主存储一致 |
+| Git 签名 | `git log --oneline -5` 含 `[termite:*]` | 所有 commit 带协议签名 |
+| **TouchCLI 设计** | `DESIGN.md` 完整，包含用户场景 + 技术栈 + Agent 拓扑 | B2B/B2C/通用场景、完整技术栈选型 |
+| **Agent 架构** | Router (中枢) → Sales/Data/Strategy + 后台 Sentinel/Memory/Coach | 对应 DESIGN.md 第 5 节拓扑 |
 
 ---
 
 ## Configuration & Secrets
 
-<!-- 在此说明环境变量和配置文件结构，不要包含实际密钥值 -->
+| 文件/变量 | 用途 | 说明 |
+|----------|------|------|
+| `.env` | 环境变量 | Termite 系统变量（TERMITE_*），示例见 QUICKSTART.md |
+| `.termite-telemetry.yaml` | 跨蚁丘反馈 | 启用/禁用审计包上报，默认 false |
+| `TERMITE_REPO_URL` | 协议源仓库 | 升级时使用，默认 `billbai-longarena/Termite-Protocol` |
+| 无应用密钥 | 本框架仅定义协议 | 具体应用（TouchCLI）的 API 密钥、DB 凭证由宿主项目管理 |
 
 ## 分支治理（固定）
 
@@ -217,6 +227,13 @@ swarm ──(人类挑拣稳定功能)──▶ uat ──(测试通过后合并
 ---
 
 ## 已知限制
+
+- **本仓库纯文档驱动** — 无可直接运行的应用产物，仅包含协议框架 + 设计文档
+- **TouchCLI 应用代码未开始** — React + Python + Go 完整栈尚未实现，仅完成 DESIGN.md 设计
+- **协议脚本运行环境** — 在 macOS/Linux 测试，Windows 未验证（需要 bash 5.0+）
+- **SQLite 版本要求** — 3.15.0+（支持 WAL 模式）
+- **非交互 Agent 支持** — 认领机制依赖 `field-claim.sh`，需要 git 支持
+- **跨蚁丘反馈** — 审计包导出功能依赖网络和 GitHub 权限（默认关闭）
 
 > 动态状态在 `BLACKBOARD.md`。
 
