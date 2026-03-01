@@ -25,6 +25,7 @@ from agent_service.schemas import (
     CustomerCreate, CustomerResponse, OpportunityCreate, OpportunityResponse,
     HealthCheckResponse, ComponentHealth
 )
+from agent_service.workflow import ConversationWorkflow
 
 # Configure logging
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
@@ -201,14 +202,15 @@ async def send_message(
 
     Returns:
         - message_id: New message UUID
-        - task_id: Async task ID for polling progress (TODO: implement with Celery)
+        - task_id: Async task ID for polling progress
+        - agent_response: Initial agent response
     """
     # Validate conversation exists
     conversation = db.query(Conversation).filter(Conversation.id == req.conversation_id).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # Create message
+    # Create message record
     message = Message(
         conversation_id=req.conversation_id,
         sender_id=sender_id,
@@ -223,16 +225,46 @@ async def send_message(
 
     logger.info(f"Created message {message.id} in conversation {req.conversation_id}")
 
-    # TODO: Queue Agent processing task via Celery
-    # task = process_message.delay(str(message.id), str(conversation.id), req.content)
-    # task_id = task.id
+    # Process through agent workflow
+    try:
+        workflow = ConversationWorkflow(db)
+        result = await workflow.process_message(
+            conversation_id=req.conversation_id,
+            user_id=conversation.user_id,
+            message=req.content,
+            customer_id=conversation.customer_id,
+            opportunity_id=conversation.opportunity_id,
+        )
 
-    return {
-        "message_id": str(message.id),
-        "task_id": "placeholder-task-id",  # TODO: Replace with Celery task ID
-        "status": "processing",
-        "message": "Message received, Agent processing started"
-    }
+        # Create agent response message
+        agent_message = Message(
+            conversation_id=req.conversation_id,
+            sender_role="agent",
+            content=result.get("agent_response", ""),
+            content_type="text",
+            attachments=[]
+        )
+        db.add(agent_message)
+        db.commit()
+
+        return {
+            "message_id": str(message.id),
+            "task_id": str(message.id),  # Use message ID as task ID for now
+            "status": "completed",
+            "agent_response": result.get("agent_response"),
+            "next_agent": result.get("next_agent"),
+            "confidence": result.get("confidence"),
+        }
+
+    except Exception as e:
+        logger.error(f"Agent processing failed: {e}")
+        return {
+            "message_id": str(message.id),
+            "task_id": str(message.id),
+            "status": "failed",
+            "error": str(e),
+            "agent_response": "I encountered an error processing your message. Please try again.",
+        }
 
 
 @app.get("/conversations/{conversation_id}/messages")
