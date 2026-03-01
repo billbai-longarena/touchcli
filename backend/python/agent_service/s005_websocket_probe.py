@@ -10,7 +10,7 @@ import asyncio
 import time
 import logging
 import sys
-from statistics import mean, median, quantiles
+from statistics import mean, median
 from typing import List, Tuple
 
 try:
@@ -73,22 +73,22 @@ def calculate_percentiles(values: List[float]) -> dict:
         return {"p50": float("nan"), "p95": float("nan"), "p99": float("nan")}
 
     sorted_vals = sorted(values)
+    n = len(sorted_vals)
 
-    try:
-        # Python 3.8+ has quantiles
-        quants = quantiles(sorted_vals, n=100)
-        return {
-            "p50": quants[49],  # 50th percentile
-            "p95": quants[94],  # 95th percentile
-            "p99": quants[98],  # 99th percentile
-        }
-    except (ValueError, IndexError):
-        # Fallback for small samples
-        return {
-            "p50": sorted_vals[len(sorted_vals) // 2],
-            "p95": sorted_vals[int(len(sorted_vals) * 0.95)],
-            "p99": sorted_vals[int(len(sorted_vals) * 0.99)],
-        }
+    def pct(p: int) -> float:
+        # Same rank-style percentile as shell probes (nearest-rank, 1-indexed).
+        idx = int((p / 100.0) * n + 0.999999) - 1
+        if idx < 0:
+            idx = 0
+        if idx >= n:
+            idx = n - 1
+        return sorted_vals[idx]
+
+    return {
+        "p50": pct(50),
+        "p95": pct(95),
+        "p99": pct(99),
+    }
 
 
 async def main():

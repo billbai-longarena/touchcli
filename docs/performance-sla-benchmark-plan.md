@@ -44,6 +44,10 @@ For threshold gate checks, use:
 
 `scripts/s005-latency-gate.sh`
 
+For WebSocket RTT baseline checks, use:
+
+`scripts/s005-websocket-probe.sh`
+
 Default endpoints:
 
 - `http://localhost:8080/health` (gateway)
@@ -68,6 +72,9 @@ SAMPLES=80 ./scripts/s005-latency-probe.sh
 
 # Run stricter gate for pre-release
 MAX_P95_MS=150 MAX_P99_MS=300 MAX_FAILURE_RATE=0 ./scripts/s005-latency-gate.sh
+
+# Run WebSocket ping/pong RTT probe
+SAMPLES=50 WS_URL=ws://localhost:8080/ws ./scripts/s005-websocket-probe.sh
 ```
 
 ## How to Read Output
@@ -83,6 +90,7 @@ Suggested gate:
 
 - Local dev gate: `p95_ms < 300`
 - Pre-release gate: `p95_ms < 150`, `p99_ms < 300`, failure rate `= 0%`
+- WebSocket target: `p99_ms < 100`
 
 ## Next Step for S-005
 
