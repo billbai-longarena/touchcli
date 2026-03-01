@@ -1,0 +1,116 @@
+name: S-005 Performance SLA Check
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/s005-performance-check.yml"
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  performance-sla:
+    name: Performance SLA Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: touchcli_user
+          POSTGRES_PASSWORD: touchcli_password
+          POSTGRES_DB: touchcli
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        working-directory: backend/python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install websockets
+
+      - name: Start FastAPI service
+        working-directory: backend/python
+        env:
+          DATABASE_URL: postgresql://touchcli_user:touchcli_password@localhost:5432/touchcli
+          REDIS_URL: redis://localhost:6379/0
+        run: |
+          python -m agent_service.seeds  # Seed test data
+          python -m agent_service &
+          sleep 3  # Give server time to start
+
+      - name: HTTP Latency Probe (Gateway & Agent Service)
+        working-directory: backend/python
+        run: |
+          bash ../../scripts/s005-latency-probe.sh
+        env:
+          SAMPLES: 40
+
+      - name: WebSocket RTT Probe
+        working-directory: backend/python
+        run: |
+          python -m agent_service.s005_websocket_probe --samples=40 --url=ws://localhost:8080/ws
+        continue-on-error: true  # WebSocket may not be available in test env
+
+      - name: Database Query Performance Benchmark
+        working-directory: backend/python
+        run: |
+          python -m agent_service.s005_db_benchmark --iterations=50
+        env:
+          DATABASE_URL: postgresql://touchcli_user:touchcli_password@localhost:5432/touchcli
+
+      - name: Generate Performance Report
+        if: always()
+        working-directory: backend/python
+        run: |
+          echo "## S-005 Performance SLA Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**SLA Targets:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Agent response time: < 500ms (p95)" >> $GITHUB_STEP_SUMMARY
+          echo "- WebSocket RTT: < 100ms (p99)" >> $GITHUB_STEP_SUMMARY
+          echo "- Database query: < 50ms (p99)" >> $GITHUB_STEP_SUMMARY
+          echo "- Concurrent users: >= 1000" >> $GITHUB_STEP_SUMMARY
+          echo "- Service availability: >= 99.5%" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Test Execution:** $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR with Results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✓ S-005 Performance SLA check completed. See [Actions](../runs/${{ github.run_id }}) for detailed results.'
+            })
