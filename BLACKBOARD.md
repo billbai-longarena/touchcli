@@ -31,15 +31,35 @@
 | Phase 2+  | ✅ **CRITICAL PATH PREP** (JWT, seeds, tests - ready for Phase 3) | ✓ ready | 2026-03-02 Worker |
 | Phase 3   | 🟢 **IN PROGRESS** (Auth ✅, E2E 54+ tests ✅, Schema fixes ✅) | ↗️ active | 2026-03-02 Worker |
 
-## Signals (5 Active) — After Metabolism Decay Cycle
+## Signals (17 total: 5 completed/archived + 12 open) — Post Gap Audit 2026-03-02
 
-| ID | Type | Title | Weight | TTL | Status | Owner | Source |
-|----|------|-------|--------|-----|--------|-------|--------|
-| S-003 | HOLE | Phase 2: ✅ COMPLETE (7 tasks, 3,569 lines, all endpoints + agents + Celery) | 35 | 30d | completed | worker-phase2 | emergent |
-| S-002 | IMPLEMENT | Phase 1: ✅ COMPLETE (schema, API, WebSocket, Redis design) | 32 | 21d | completed | worker-phase1 | emergent |
-| S-005 | PROBE | EXPLORE: Performance Benchmarks & SLA Definition (✅ COMPLETE, 10 test suites) | 18 | 21d | completed | worker-perf | emergent |
-| S-001 | EXPLORE | Map unknown project (✅ ARCHIVED per Rule R-001: w≤20) | 17 | 14d | archived | scout | autonomous |
-| S-004 | PROBE | EXPLORE: Internationalization & Multi-language Support | 8 | 21d | open | unassigned | scout-decision |
+### Completed / Archived Signals
+
+| ID | Type | Title | Weight | Status | Owner |
+|----|------|-------|--------|--------|-------|
+| S-001 | EXPLORE | Map unknown project | 17 | archived | scout |
+| S-002 | IMPLEMENT | Phase 1 COMPLETE (schema, API, WebSocket, Redis design) | 32 | completed | worker-phase1 |
+| S-003 | HOLE | Phase 2 COMPLETE (7 tasks, 3,569 lines, all endpoints + agents + Celery) | 35 | completed | worker-phase2 |
+| S-004 | PROBE | i18n & Multi-language Support | 5 | completed | worker-i18n |
+| S-005 | PROBE | Performance Benchmarks & SLA Definition | 18 | completed | worker-perf |
+| S-006 | HOLE | Locale fields + resolver (Phase 3 engineering infra) | 14 | completed | worker-i18n |
+
+### Open Signals — Gap Audit 新分配 (按权重降序)
+
+| ID | Type | Title | Weight | Priority | Dependencies | Owner |
+|----|------|-------|--------|----------|-------------|-------|
+| S-007 | IMPLEMENT | LLM Agent 智能集成（意图识别 + 工具调用 + 流式输出） | 80 | P0 | — | unassigned |
+| S-008 | IMPLEMENT | WebSocket 端到端贯通（Go Gateway ↔ Python Agent 桥） | 70 | P0 | — | unassigned |
+| S-009 | IMPLEMENT | 数据模型扩展（contacts, interactions, memories, notifications, organizations） | 60 | P1 | — | unassigned |
+| S-010 | IMPLEMENT | 富消息类型（实体卡片, 确认卡片, 快捷回复） | 55 | P1 | S-007 | unassigned |
+| S-011 | IMPLEMENT | 人机协作确认流（L0-L4 操作分级） | 50 | P1 | S-007, S-010 | unassigned |
+| S-012 | IMPLEMENT | 语音引擎（STT + TTS + VAD） | 45 | P2 | S-008 | unassigned |
+| S-013 | IMPLEMENT | Sentinel Agent 后台哨兵（监控 + 告警） | 40 | P2 | S-007, S-009 | unassigned |
+| S-014 | IMPLEMENT | Memory Agent 记忆管理（抽取 + 整合 + 衰减 + pgvector） | 38 | P2 | S-007, S-009 | unassigned |
+| S-015 | IMPLEMENT | 通知服务（Web Push + 优先级路由 + 防打扰） | 30 | P3 | S-008, S-009, S-013 | unassigned |
+| S-016 | IMPLEMENT | Coach Agent 行为教练（周报 + 行为分析） | 25 | P3 | S-007, S-014 | unassigned |
+| S-017 | IMPLEMENT | PWA & 离线支持（Service Worker + IndexedDB） | 20 | P3 | S-008 | unassigned |
+| S-018 | IMPLEMENT | 前端设计系统升级（TailwindCSS + 响应式 3 布局） | 15 | P3 | — | unassigned |
 
 ## Emerged Rules
 
@@ -54,14 +74,15 @@
 
 ## Notes for AI
 
-- **Project Timeline**: Genesis ✅ → Phase 1 ✅ → Phase 2 ✅ → Phase 3 🟢 In Progress (Task 3.1 ✅, 3.6 E2E ✅, 3.2-3.5/3.7 pending) → Phase 4+ (Planning)
-- **DECISIONS.md**: Strategic planning complete (5 Phase breakdown, 12-16 week timeline, 8 core decisions + 2 EXPLORE items)
-- **Signal Hierarchy** (current after decay 0.98):
-  - S-003 (w:35, HOLE) — Phase 2 complete ✅ (3,569 lines, all tasks)
-  - S-002 (w:32, IMPLEMENT) — Phase 1 complete ✅ (1,887 lines specs)
-  - S-005 (w:18, PROBE) — Performance benchmarks ✅ (10 test suites complete)
-  - S-004 (w:8, PROBE) — i18n research (Phase 3+ priority)
-  - S-001 (w:17, EXPLORE) — ✅ ARCHIVED per Rule R-001 (w≤20 threshold reached)
+- **Project Status**: 工程脚手架 ✅ COMPLETE → 核心智能层 🔴 NOT STARTED (DESIGN.md Phase 1-4 约 20% 完成)
+- **Gap Audit**: 2026-03-02 完成，详见 AUDIT_GAPS.md，12 个新信号已分配 (S-007~S-018)
+- **关键洞察**: 后端/前端/CI/CD 框架完整，但 Agent 全部是 keyword stub，无 LLM 集成
+- **Signal Hierarchy** (post-audit):
+  - **P0 (core)**: S-007 (w:80, LLM Agent) + S-008 (w:70, WebSocket E2E)
+  - **P1 (usable)**: S-009 (w:60, Data Model) + S-010 (w:55, Rich Messages) + S-011 (w:50, Human-in-Loop)
+  - **P2 (unique)**: S-012 (w:45, Voice) + S-013 (w:40, Sentinel) + S-014 (w:38, Memory)
+  - **P3 (mature)**: S-015 (w:30, Notifications) + S-016 (w:25, Coach) + S-017 (w:20, PWA) + S-018 (w:15, Design)
+- **Parallel Plan**: Wave 1 (S-007+S-008+S-009+S-018) → Wave 2 (S-010+S-012+S-013+S-014) → Wave 3 (S-011+S-015+S-016+S-017)
 - **Completion Milestones**:
   1. ✅ Genesis verified (Rule R-001 emerged: Foundation Genesis Verified)
   2. ✅ Phase 1 complete (1,887 lines specifications)

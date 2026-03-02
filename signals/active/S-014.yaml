@@ -1,0 +1,40 @@
+# Signal S-014 — Memory Agent 记忆管理
+id: S-014
+type: IMPLEMENT
+title: "Memory Agent — 对话记忆抽取 + 跨对话整合 + 衰减机制 + pgvector 语义搜索"
+status: open
+weight: 38
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service/agents"
+tags: [agent, memory, embedding, pgvector, p2, phase2]
+source: audit-gap-analysis
+
+# 问题描述
+# DESIGN.md 5.2 定义了 Memory Agent：管理对话中产出的知识，是 Agent 长期智能的基础。
+# 当前没有记忆系统，Agent 每次对话都是无状态的。
+
+deliverables:
+  - "Memory Agent 实现（继承 BaseAgent）"
+  - "记忆抽取：从每次对话中提取关键事实（客户偏好、承诺、反对意见）"
+  - "记忆整合：跨对话合并同一客户/商机的信息"
+  - "记忆衰减：过时信息自动降权（decay_rate 字段，每天衰减）"
+  - "Embedding 生成：调用 LLM embedding API 生成 VECTOR(1536)"
+  - "语义搜索：pgvector cosine similarity 查询最相关记忆"
+  - "记忆注入：Agent 处理消息时自动加载相关记忆到上下文"
+  - "Celery 定时任务：每日执行记忆衰减和清理"
+
+acceptance:
+  - "用户说'华为张总喜欢打高尔夫' → 自动存入 memories 表"
+  - "下次谈到华为时 Agent 能检索出'张总喜欢高尔夫'作为上下文"
+  - "30 天前的低重要度记忆自动衰减到接近 0"
+  - "语义搜索能匹配'张总的兴趣爱好'→'打高尔夫'"
+
+dependencies: [S-007, S-009]
+blocks: [S-016]
+estimated_days: 4-5
+
+next: "先实现 memories 表 + embedding 生成 + 基础语义搜索"
+touch_count: 0

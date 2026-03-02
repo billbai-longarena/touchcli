@@ -1,0 +1,40 @@
+# Signal S-010 — 富消息类型
+id: S-010
+type: IMPLEMENT
+title: "Rich Message Types — 实体卡片、操作结果、确认卡片、快捷回复、迷你图表"
+status: open
+weight: 55
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "frontend/src/components + backend schemas"
+tags: [frontend, ui, messages, p1]
+source: audit-gap-analysis
+
+# 问题描述
+# DESIGN.md 7.2 定义了 7 种消息类型，当前只有纯文本（text）。
+# 对话式 CRM 的关键体验在于：Agent 的回复不只是文字，还包含结构化卡片。
+
+deliverables:
+  - "entity_card 组件：客户/商机/联系人摘要卡片（名称+关键指标，可点击展开）"
+  - "action_result 组件：操作结果状态（已创建/已修改/失败 + 实体摘要）"
+  - "confirmation 组件：待确认操作（操作详情 + 确认/取消/修改按钮）"
+  - "quick_replies 组件：建议回复 chip 列表（可点击发送）"
+  - "chart_mini 组件：迷你数据可视化（漏斗/趋势/占比简图）"
+  - "voice_note 组件：语音消息播放条 + 转写文字（预留，S-012 实现时启用）"
+  - "消息渲染器：根据 content_type 字段自动选择组件"
+  - "后端 message.content_type 和 message.metadata 格式定义"
+
+acceptance:
+  - "Agent 返回 entity_card 类型消息时，前端渲染为卡片而非纯文本"
+  - "确认卡片的确认/取消按钮能触发对应操作"
+  - "快捷回复 chip 点击后发送对应文本"
+  - "所有卡片在移动端正确显示"
+
+dependencies: [S-007]
+blocks: [S-011]
+estimated_days: 4-5
+
+next: "先定义消息 content_type 枚举和 metadata JSON schema，再实现前端组件"
+touch_count: 0

@@ -1,0 +1,44 @@
+# Signal S-007 — LLM Agent 智能集成
+id: S-007
+type: IMPLEMENT
+title: "LLM Agent Intelligence — 接入真实 LLM，实现意图识别、工具调用与流式输出"
+status: open
+weight: 80
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service/agents"
+tags: [agent, llm, core, p0, phase1-gap]
+source: audit-gap-analysis
+
+# 问题描述
+# 当前所有 Agent（Router/Sales/Data/Strategy）都是 keyword-based stub，
+# 返回固定文本，不具备真实智能能力。这是 TouchCLI 产品核心差异化所在。
+
+# 交付物
+deliverables:
+  - "接入 LLM API（Claude/GPT/Deepseek 至少一个），Router Agent 实现 LLM 意图识别"
+  - "Sales Agent 能真正拟消息、生成话术、创建跟进计划"
+  - "Data Agent 能理解自然语言查询并转化为 DB 操作"
+  - "Strategy Agent 能分析商机数据并给出有依据的建议"
+  - "实现 Agent 工具调用框架（function calling / tool use）"
+  - "LLM 响应流式输出（SSE 或 WebSocket 推送）"
+  - "LLM Gateway 抽象层（支持多模型切换）"
+  - "Token 用量计量和成本控制"
+
+# 验收标准
+acceptance:
+  - "用户输入自然语言，Router 正确路由到对应 Agent（准确率 > 90%）"
+  - "Sales Agent 能根据客户上下文生成个性化消息"
+  - "Data Agent 能执行 '查一下华为的商机' 类查询"
+  - "Strategy Agent 能给出有数据支撑的商机分析"
+  - "流式输出 token-by-token 可见"
+  - "LLM 调用有超时和重试机制"
+
+dependencies: []
+blocks: [S-010, S-011, S-013, S-014, S-016]
+estimated_days: 5-7
+
+next: "开始接入 LLM API，从 Router Agent 的意图识别开始"
+touch_count: 0

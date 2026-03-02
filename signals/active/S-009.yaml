@@ -1,0 +1,44 @@
+# Signal S-009 — 数据模型扩展
+id: S-009
+type: IMPLEMENT
+title: "Data Model Expansion — contacts, interactions, memories, notifications, organizations"
+status: open
+weight: 60
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service/models.py + migrations"
+tags: [database, schema, models, p1, phase1-gap]
+source: audit-gap-analysis
+
+# 问题描述
+# DESIGN.md 定义了 11 张核心表，当前只实现了 6 张（users, customers, opportunities,
+# conversations, messages, agent_states）。缺少 5 张关键业务表。
+
+deliverables:
+  - "contacts 表：联系人管理（name, title, role, attitude, customer_id）"
+  - "interactions 表：互动记录（type, summary, sentiment, next_action）"
+  - "memories 表：Agent 记忆（content, embedding VECTOR(1536), importance, decay_rate）"
+  - "notifications 表：通知队列（type, priority P0-P3, status, scheduled_at）"
+  - "organizations 表：多租户（name, plan, settings JSONB）"
+  - "customers 表增加 B2B/B2C 统一字段（type, industry, age, gender, budget_range, concerns）"
+  - "users 表增加 sso_subject 和 org_id 字段"
+  - "Alembic migration 脚本"
+  - "对应的 Pydantic schemas 和 CRUD API endpoints"
+  - "pgvector 扩展安装和 memories.embedding 索引"
+
+acceptance:
+  - "所有 5 张新表通过 alembic upgrade head 创建成功"
+  - "contacts CRUD API 可用"
+  - "interactions 记录 API 可用"
+  - "memories 支持向量搜索（pgvector cosine similarity）"
+  - "notifications 支持按优先级查询"
+  - "现有测试不回归"
+
+dependencies: []
+blocks: [S-013, S-014, S-015]
+estimated_days: 3-4
+
+next: "从 contacts 和 interactions 表开始，这两个是 Agent 工作的基础数据"
+touch_count: 0

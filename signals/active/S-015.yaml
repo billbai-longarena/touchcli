@@ -1,0 +1,40 @@
+# Signal S-015 — 通知服务
+id: S-015
+type: IMPLEMENT
+title: "Notification Service — Web Push + 优先级路由 P0-P3 + 防打扰 + 偏好设置"
+status: open
+weight: 30
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend + frontend"
+tags: [notification, push, p3, phase3]
+source: audit-gap-analysis
+
+# 问题描述
+# DESIGN.md 第 9 章定义了完整的通知系统：多通道推送 + 优先级 + 防打扰。
+# 当前 Celery tasks.py 中 send_notification 是 stub（仅打日志）。
+
+deliverables:
+  - "Web Push API 集成（VAPID 密钥对 + 浏览器订阅）"
+  - "通知优先级路由：P0 即时震动, P1 即时, P2 汇总(早晚各一次), P3 每日摘要"
+  - "App 内通知：WebSocket 实时推送 + 通知中心 UI"
+  - "防打扰机制：勿扰时间段(默认 22:00-08:00) + 连续忽略自动降级"
+  - "通知偏好设置页面（前端）"
+  - "通知中心 UI（未读计数 + 列表 + 标记已读）"
+  - "Celery 定时任务：P2/P3 汇总推送调度"
+
+acceptance:
+  - "Sentinel 触发告警 → P1 级通知即时推送到浏览器"
+  - "用户设置勿扰时间后，该时段内不推送"
+  - "P2 通知在早上 8:30 和晚上 6:00 汇总推送"
+  - "用户连续忽略 3 次同类通知 → 自动降级"
+  - "通知中心显示历史通知列表"
+
+dependencies: [S-008, S-009, S-013]
+blocks: []
+estimated_days: 4-5
+
+next: "先实现 App 内通知（WebSocket 推送），再加 Web Push"
+touch_count: 0

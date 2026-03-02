@@ -1,0 +1,39 @@
+# Signal S-017 — PWA & 离线支持
+id: S-017
+type: IMPLEMENT
+title: "PWA & Offline — Service Worker + IndexedDB 离线消息队列 + 后台同步 + manifest"
+status: open
+weight: 20
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "frontend"
+tags: [pwa, offline, service-worker, p3, phase4]
+source: audit-gap-analysis
+
+# 问题描述
+# DESIGN.md 4.1 明确选择 PWA 架构，7.4 定义了离线策略。
+# 当前前端是普通 SPA，无 Service Worker、无 manifest、无离线能力。
+
+deliverables:
+  - "Web App Manifest（name, icons, theme_color, display: standalone）"
+  - "Service Worker（Workbox 集成）"
+  - "对话历史离线缓存（Cache First 策略 + IndexedDB）"
+  - "离线消息队列（IndexedDB 暂存 → 联网后同步）"
+  - "Add to Home Screen 支持"
+  - "后台同步（Background Sync API）"
+  - "Vite PWA 插件配置"
+
+acceptance:
+  - "App 可添加到手机主屏幕"
+  - "离线时能查看历史对话"
+  - "离线时输入的消息存入队列，联网后自动发送"
+  - "Lighthouse PWA 评分 > 90"
+
+dependencies: [S-008]
+blocks: []
+estimated_days: 3-4
+
+next: "从 vite-plugin-pwa + manifest 开始，最小化 PWA 先上线"
+touch_count: 0

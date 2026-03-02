@@ -1,0 +1,37 @@
+# Signal S-016 — Coach Agent 行为教练
+id: S-016
+type: IMPLEMENT
+title: "Coach Agent — 销售行为模式分析 + 周报推送 + 改进建议"
+status: open
+weight: 25
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service/agents"
+tags: [agent, coach, analytics, p3, phase3]
+source: audit-gap-analysis
+
+# 问题描述
+# DESIGN.md 5.2 定义了 Coach Agent：分析销售行为，给出改进建议。
+# 这是 TouchCLI 从"工具"升级为"教练"的关键能力。
+
+deliverables:
+  - "Coach Agent 实现（继承 BaseAgent）"
+  - "周报生成：每周一早上推送周报（跟进数、推进数、转化率分析）"
+  - "行为模式检测：识别低效模式（如多个丢失商机卡在同一阶段）"
+  - "改进建议生成：基于历史数据给出可操作的建议"
+  - "Celery 定时任务：每周一 8:00 触发周报"
+  - "数据聚合查询：统计漏斗、转化率、平均周期"
+
+acceptance:
+  - "周一早上用户收到周报消息：'上周跟进了 12 个客户，4 个推进了...'"
+  - "检测到 3 个丢失商机在同一阶段 → 推送改进建议"
+  - "周报包含与上周的对比数据"
+
+dependencies: [S-007, S-014]
+blocks: []
+estimated_days: 3-4
+
+next: "先实现周报数据聚合查询，再用 LLM 生成自然语言周报"
+touch_count: 0

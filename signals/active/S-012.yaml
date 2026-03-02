@@ -1,0 +1,41 @@
+# Signal S-012 — 语音引擎
+id: S-012
+type: IMPLEMENT
+title: "Voice Engine — Web Speech API STT + TTS 输出 + Silero VAD 语音活动检测"
+status: open
+weight: 45
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "frontend/src + backend"
+tags: [voice, stt, tts, vad, p2, phase2]
+source: audit-gap-analysis
+
+# 问题描述
+# DESIGN.md 第 8 章完整描述了语音交互设计，这是 TouchCLI 的第四条设计原则"语音优先"。
+# 当前完全没有语音能力，前端只有文字输入。
+
+deliverables:
+  - "Web Speech API STT 集成（浏览器原生语音识别，流式转写）"
+  - "Whisper API 兜底（浏览器不支持 Web Speech API 时）"
+  - "TTS 集成（服务端 Azure TTS 或 minimax，音频流推送到前端）"
+  - "Silero VAD（WebAssembly 语音活动检测）"
+  - "语音输入 UI：按住说话 + 点击切换两种模式"
+  - "语音输入动画：脉动波纹 + 实时转写文字"
+  - "语音输出 UI：自动朗读 + 高亮当前句子 + 中断控制"
+  - "WebSocket 音频帧传输（audio frame type 已预留）"
+
+acceptance:
+  - "用户按住麦克风说话，实时显示转写文字"
+  - "松开后文字自动发送给 Agent"
+  - "Agent 回复自动朗读（可设置默认开关）"
+  - "用户可中断朗读"
+  - "嘈杂环境下 VAD 不误触发"
+
+dependencies: [S-008]
+blocks: []
+estimated_days: 5-6
+
+next: "先实现 Web Speech API STT（最快可用路径），再逐步加 TTS 和 VAD"
+touch_count: 0

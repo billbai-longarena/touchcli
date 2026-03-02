@@ -1,0 +1,41 @@
+# Signal S-013 — Sentinel Agent 后台哨兵
+id: S-013
+type: IMPLEMENT
+title: "Sentinel Agent — 商机停滞/客户沉默/到期监控 + 主动推送告警"
+status: open
+weight: 40
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service/agents"
+tags: [agent, sentinel, monitoring, p2, phase3]
+source: audit-gap-analysis
+
+# 问题描述
+# DESIGN.md 5.2 定义了 Sentinel Agent：7×24 后台监控，发现异常主动通知用户。
+# 这是 TouchCLI "Agent 先行动"原则（第 2 条设计原则）的核心实现。
+
+deliverables:
+  - "Sentinel Agent 实现（继承 BaseAgent）"
+  - "监控规则引擎（可配置的触发条件）"
+  - "规则1：商机停滞 — 同一阶段 > 7 天"
+  - "规则2：客户沉默 — 最后互动 > 14 天"
+  - "规则3：商机到期 — 预期关单日 < 7 天"
+  - "规则4：新线索 — 外部数据源推送（预留接口）"
+  - "Celery 定时任务：每小时扫描一次规则"
+  - "告警去重：同一事项 24 小时内最多提醒 2 次"
+  - "告警写入 notifications 表 + 推送到在线用户"
+
+acceptance:
+  - "商机在方案阶段停 8 天后，用户收到推送'华为项目在方案阶段停了 8 天'"
+  - "客户 15 天无互动后收到推送"
+  - "同一告警 24 小时内不重复发送"
+  - "用户可查看告警历史列表"
+
+dependencies: [S-007, S-009]
+blocks: [S-015]
+estimated_days: 4-5
+
+next: "先实现商机停滞和客户沉默两个最基本的规则"
+touch_count: 0

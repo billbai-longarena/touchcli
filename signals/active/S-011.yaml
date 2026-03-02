@@ -1,0 +1,40 @@
+# Signal S-011 — 人机协作确认流
+id: S-011
+type: IMPLEMENT
+title: "Human-in-the-Loop — L0-L4 操作分级 + 对话式确认/取消/修改"
+status: open
+weight: 50
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service/agents + frontend"
+tags: [agent, ux, safety, p1]
+source: audit-gap-analysis
+
+# 问题描述
+# DESIGN.md 5.4 定义了操作分级确认机制（L0-L4），这是 AI Agent 安全性的核心保障。
+# 当前 Agent 无确认流程，所有操作直接执行（因为 Agent 还是 stub）。
+
+deliverables:
+  - "操作分级定义：L0(查询/免确认) L1(记录/可撤销) L2(创建修改/摘要确认) L3(发送/逐字确认) L4(删除/二次确认)"
+  - "LangGraph State 增加 pending_confirmation 字段"
+  - "Agent 执行 L2+ 操作时先返回确认卡片，等待用户响应"
+  - "用户确认/取消/修改后 Agent 继续执行或放弃"
+  - "操作审计日志（activity_log 表记录所有 L2+ 操作）"
+  - "前端确认卡片交互（确认/取消/修改三个按钮）"
+  - "超时自动取消机制（5 分钟无响应则放弃操作）"
+
+acceptance:
+  - "创建商机时 Agent 先显示摘要确认卡片"
+  - "用户说'金额改成 180 万'后 Agent 修改并重新确认"
+  - "用户说'取消'后操作不执行"
+  - "删除操作需要用户说'确认删除'二次确认"
+  - "所有 L2+ 操作记录在 activity_log"
+
+dependencies: [S-007, S-010]
+blocks: []
+estimated_days: 3-4
+
+next: "先定义操作分级映射表（哪些 Agent 工具属于哪个级别）"
+touch_count: 0

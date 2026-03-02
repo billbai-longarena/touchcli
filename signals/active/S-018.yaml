@@ -1,0 +1,38 @@
+# Signal S-018 — 前端设计系统升级
+id: S-018
+type: IMPLEMENT
+title: "Frontend Design System — TailwindCSS 迁移 + 响应式 3 布局 + 设计一致性"
+status: open
+weight: 15
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "frontend/src"
+tags: [frontend, tailwind, responsive, design, p3, phase4]
+source: audit-gap-analysis
+
+# 问题描述
+# DESIGN.md 4.1 选择 TailwindCSS，7.3 定义了响应式 3 布局策略。
+# 当前使用 2,300 行 plain CSS，无设计系统，响应式仅有基础 mobile breakpoint。
+
+deliverables:
+  - "TailwindCSS 安装与配置"
+  - "现有 11 个 CSS 文件迁移到 Tailwind utility classes"
+  - "响应式 3 布局实现：手机(全屏对话) / 平板(左侧会话列表+右侧对话) / 桌面(三列)"
+  - "设计 token 统一：颜色、间距、圆角、阴影"
+  - "移动端触控优化：语音按钮放大、卡片铺满宽度"
+  - "暗色模式支持（可选）"
+
+acceptance:
+  - "所有页面使用 Tailwind classes，无 plain CSS 文件"
+  - "手机/平板/桌面三种布局正确切换"
+  - "Lighthouse 无障碍评分 > 80"
+  - "现有 E2E 测试不回归"
+
+dependencies: []
+blocks: []
+estimated_days: 4-5
+
+next: "先安装 TailwindCSS 并配置，再逐页面迁移（从 App.tsx 开始）"
+touch_count: 0

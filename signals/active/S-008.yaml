@@ -1,0 +1,39 @@
+# Signal S-008 — WebSocket 端到端贯通
+id: S-008
+type: IMPLEMENT
+title: "WebSocket End-to-End Bridge — Go Gateway ↔ Python Agent 双向实时消息桥"
+status: open
+weight: 70
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/go + backend/python"
+tags: [websocket, gateway, realtime, p0, phase1-gap]
+source: audit-gap-analysis
+
+# 问题描述
+# Go Gateway 的 WebSocket Hub 已搭建骨架，但 Agent 消息转发部分是 TODO stub。
+# 前端 WebSocket client 已实现（自动重连、心跳），但消息无法真正流通到 Agent 并返回。
+# 整条链路：Frontend WS → Go Gateway → Python Agent → Go Gateway → Frontend WS 需要贯通。
+
+deliverables:
+  - "Go Gateway 接收 WS 消息后转发到 Python Agent Service（HTTP 或内部 WS）"
+  - "Python Agent 处理完成后通过 Go Gateway 推送响应到前端"
+  - "支持 Agent 流式响应（逐 token 推送到前端）"
+  - "消息帧格式统一（type, conversation_id, content, metadata）"
+  - "连接状态同步（前端显示真实连接状态）"
+  - "错误帧传递（Agent 错误能正确推送到前端显示）"
+
+acceptance:
+  - "用户在前端发送消息 → Agent 收到并处理 → 响应实时显示在前端"
+  - "Go Gateway 日志能看到完整消息转发链路"
+  - "断线重连后消息不丢失"
+  - "并发 50+ 连接无消息错乱"
+
+dependencies: []
+blocks: [S-012, S-015, S-017]
+estimated_days: 3-4
+
+next: "实现 Go Gateway 的消息转发逻辑，先用 HTTP POST 转发到 Python /messages 端点"
+touch_count: 0
