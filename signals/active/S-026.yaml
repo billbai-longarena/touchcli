@@ -1,0 +1,33 @@
+# Signal S-026 — 预见性引擎
+id: S-026
+type: PROBE
+title: "Predictive Engine — 赢率预测 + 最佳行动时机 + 自主行动授权框架"
+status: open
+weight: 45
+ttl_days: 60
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service"
+tags: [vision, prediction, autonomous, p2, ai-era]
+source: vision-ai-era
+
+# 愿景
+# Agent 从"被动响应"进化为"主动预见"。
+# 不是"商机到期了提醒你"，而是"基于 12 个信号，这个商机下周赢率会下降，
+# 现在做这 3 件事可以扭转"。最终 Agent 在授权范围内自主行动。
+
+deliverables:
+  - "赢率预测模型：基于历史数据（阶段停留时间、互动频率、关系健康度等）"
+  - "赢率因子分解：每个因子的正/负贡献度可视化"
+  - "最佳行动时机：分析联系人的回复模式，推荐最优联系时间"
+  - "行动优先级排序：每天早上推送'今天最应该做的 3 件事'并说明为什么"
+  - "自主行动授权框架：用户预设'哪些事 Agent 可以自己做'（如节日问候、信息更新）"
+  - "自主行动日志：Agent 做了什么、效果如何、用户可随时审查和调整授权"
+
+# 对应 VISION_AI_ERA.md 范式 C: 预见性行动
+
+dependencies: [S-007, S-014, S-025]
+blocks: []
+estimated_days: 8-10
+touch_count: 0

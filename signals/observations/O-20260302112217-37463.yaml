@@ -1,0 +1,11 @@
+# READ-ONLY — auto-exported from .termite.db (2026-03-02T05:12:52Z)
+# To modify observations, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
+id: O-20260302112217-37463
+pattern: "Fixed post-login 405 errors on conversations/customers"
+context: "backend/python/agent_service/main.py routes and request typing"
+reporter: "termite:2026-03-02:worker"
+confidence: high
+created: 2026-03-02
+source: autonomous
+detail: |
+  Added GET /conversations and GET /customers, typed Request params to avoid 422, adapted customer serialization to frontend contract; Playwright network log after login shows no >=400 failures.

@@ -1,4 +1,4 @@
-# READ-ONLY — auto-exported from .termite.db (2026-03-02T02:03:50Z)
+# READ-ONLY — auto-exported from .termite.db (2026-03-02T05:12:52Z)
 # To modify observations, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: O-20260302032657-80168
 pattern: "S-006 validated complete: locale model/schema/migration/resolver chain consistent and compiles"

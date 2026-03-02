@@ -1,0 +1,33 @@
+# Signal S-029 — 渠道聚合
+id: S-029
+type: PROBE
+title: "Channel Aggregation — 微信/邮件/电话/日历统一信息采集 + 自动关联 + 全渠道客户视图"
+status: open
+weight: 30
+ttl_days: 60
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend + integrations"
+tags: [vision, channel, integration, p3, ai-era]
+source: vision-ai-era
+
+# 愿景
+# 销售的沟通散落在微信、邮件、电话、面对面——当前这些都是信息孤岛。
+# Agent 将所有渠道的信息统一采集、自动关联到对应客户/商机，形成完整的客户互动时间线。
+# 一个客户的所有沟通（不管通过什么渠道）都在一个地方可见。
+
+deliverables:
+  - "微信集成：消息转发/截图 → Agent 提取要点 → 自动关联客户"
+  - "邮件集成：邮件同步 → 主题/附件/关键信息提取"
+  - "电话集成：通话记录同步 + 可选通话录音语义分析"
+  - "日历集成：会议安排自动关联客户和商机"
+  - "全渠道客户时间线：所有渠道的互动按时间排列，一个视图看完"
+  - "渠道偏好分析：'张总偏好微信沟通，邮件回复率只有 30%'"
+
+# 对应 VISION_AI_ERA.md 范式 A: 无感知数据采集（渠道维度）
+
+dependencies: [S-008, S-009, S-024]
+blocks: []
+estimated_days: 10-14
+touch_count: 0

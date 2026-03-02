@@ -1,0 +1,11 @@
+# READ-ONLY — auto-exported from .termite.db (2026-03-02T05:12:52Z)
+# To modify observations, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
+id: O-20260302102711-50198
+pattern: "App.tsx invalid hook call fixed"
+context: "frontend/src/App.tsx useEffect session restore"
+reporter: "termite:2026-03-02:worker"
+confidence: high
+created: 2026-03-02
+source: autonomous
+detail: |
+  Replaced useAuthStore() call inside effect callback with useAuthStore.getState().restoreSession(); playwright console check shows 0 errors.

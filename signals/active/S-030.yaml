@@ -1,0 +1,33 @@
+# Signal S-030 — 行业知识引擎
+id: S-030
+type: PROBE
+title: "Industry Knowledge Engine — 行业报告/案例/基准数据 + 客户商业画像 + TCO/ROI 计算"
+status: open
+weight: 28
+ttl_days: 60
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service"
+tags: [vision, industry, knowledge, p3, ai-era]
+source: vision-ai-era
+
+# 愿景
+# Agent 不只是 CRM 操作员，而是行业顾问。
+# 它理解客户的业务，能用行业数据和同行案例帮销售说服客户。
+# 当客户说"担心成本"，Agent 不只是记录，而是立即算出 TCO 并给出同行参考。
+
+deliverables:
+  - "行业知识库：行业报告、市场数据、趋势分析（RAG 架构）"
+  - "客户商业画像：从公开信息（年报、新闻、招聘、社交媒体）构建"
+  - "同行案例匹配：脱敏的同行业成功案例，按相似度匹配"
+  - "财务分析工具：TCO 计算器、ROI 模型、投资回收期估算"
+  - "竞品数据库：竞品产品/价格/优劣势持续更新"
+  - "实时信号监控：客户公司新闻/招聘/融资 → 销售信号提取"
+
+# 对应 VISION_AI_ERA.md 范式 F: 价值链深度参与
+
+dependencies: [S-007, S-019]
+blocks: []
+estimated_days: 10-14
+touch_count: 0

@@ -1,0 +1,32 @@
+# Signal S-025 — 关系智能系统
+id: S-025
+type: PROBE
+title: "Relationship Intelligence — 关系健康度评分 + 社交图谱 + 沟通风格画像 + 关系预警"
+status: open
+weight: 48
+ttl_days: 60
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service"
+tags: [vision, relationship, cognition, p2, ai-era]
+source: vision-ai-era
+
+# 愿景
+# Agent 不只管理"联系人数据"，而是真正理解"人与人之间的关系"。
+# 关系有温度、有趋势、有网络结构。Agent 能看到你看不到的关系暗流。
+
+deliverables:
+  - "关系健康度算法：综合互动频率、情绪趋势、承诺兑现率、响应速度 → 0-100 分"
+  - "社交网络图谱：决策链可视化（谁影响谁、谁和谁有利益关系/制衡关系）"
+  - "沟通风格画像：分析每个联系人的偏好（分析型/表达型、数据驱动/关系驱动）"
+  - "关系趋势追踪：周级别的关系变化趋势图（上升/平稳/下降）"
+  - "关系预警：健康度下降时主动提醒，并给出修复建议"
+  - "影响力分析：识别关键人物和最短影响路径"
+
+# 对应 VISION_AI_ERA.md 范式 B: 关系智能
+
+dependencies: [S-007, S-009, S-014]
+blocks: []
+estimated_days: 7-9
+touch_count: 0

@@ -31,7 +31,7 @@
 | Phase 2+  | ✅ **CRITICAL PATH PREP** (JWT, seeds, tests - ready for Phase 3) | ✓ ready | 2026-03-02 Worker |
 | Phase 3   | 🟢 **IN PROGRESS** (Auth ✅, E2E 54+ tests ✅, Schema fixes ✅) | ↗️ active | 2026-03-02 Worker |
 
-## Signals (22 total: 6 completed/archived + 16 open + 1 archived) — Post Original Compare Audit 2026-03-02
+## Signals (29 total: 6 completed/archived + 17 IMPLEMENT + 7 PROBE) — Post Vision Audit 2026-03-02
 
 ### Completed / Archived Signals
 
@@ -73,6 +73,20 @@
 
 **原版参考文件**: `/Users/bingbingbai/Desktop/salesTouch/` — agentTools.ts(9 工具), SpinCallPlannerView.vue, SalesSchemeGeneratorView.vue, ProductDetailView.vue, CustomerOpportunityView.vue
 
+### Open Signals — AI 时代愿景探针 (PROBE, 按权重降序)
+
+| ID | Type | Title | Weight | Priority | Dependencies | Owner |
+|----|------|-------|--------|----------|-------------|-------|
+| S-024 | PROBE | 多模态输入引擎（语音/图片/名片/截图 → 结构化数据） | 50 | P2 | S-007, S-012 | unassigned |
+| S-025 | PROBE | 关系智能引擎（关系健康度 + 社交图谱 + 互动节奏） | 48 | P2 | S-007, S-014 | unassigned |
+| S-026 | PROBE | 预见性引擎（赢率预测 + 最佳行动时机 + 自主行动授权） | 45 | P2 | S-007, S-014, S-025 | unassigned |
+| S-027 | PROBE | 组织知识涌现（跨用户模式识别 + Win/Loss 分析 + 最佳实践蒸馏） | 35 | P2 | S-007, S-009, S-014 | unassigned |
+| S-028 | PROBE | 情境感知交互（时间/位置/活动/情绪感知 + 自适应交互） | 32 | P3 | S-012, S-015 | unassigned |
+| S-029 | PROBE | 渠道聚合（微信/邮件/电话/日历统一采集 + 全渠道客户视图） | 30 | P3 | S-008, S-009, S-024 | unassigned |
+| S-030 | PROBE | 行业知识引擎（行业报告/案例/基准数据 + 客户商业画像 + TCO/ROI） | 28 | P3 | S-007, S-019 | unassigned |
+
+**愿景文档**: `VISION_AI_ERA.md` — 6 大体验范式 + 3 个根本范式转变 + 能力分层模型
+
 ## Emerged Rules
 
 | ID | Trigger | Action | Source | Hit Count | Created |
@@ -89,12 +103,15 @@
 - **Project Status**: 工程脚手架 ✅ COMPLETE → 核心智能层 🔴 NOT STARTED (DESIGN.md Phase 1-4 约 20% 完成)
 - **Gap Audit**: 2026-03-02 完成，详见 AUDIT_GAPS.md (设计 vs 实现) + AUDIT_ORIGINAL_COMPARE.md (原版 vs 设计)
 - **关键洞察**: 后端/前端/CI/CD 框架完整，但 Agent 全部是 keyword stub；原版核心业务功能（产品库/SPIN/方案生成）在设计中遗漏
-- **Signal Hierarchy** (post-audit, 17 open signals):
+- **Signal Hierarchy** (post-audit, 24 open signals: 17 IMPLEMENT + 7 PROBE):
   - **P0 (core)**: S-007 (w:80, LLM Agent) + S-008 (w:70, WebSocket E2E)
   - **P1 (usable)**: S-019 (w:65, 产品知识库) + S-009 (w:60, Data Model) + S-010 (w:55, Rich Messages) + S-011 (w:50, Human-in-Loop) + S-020 (w:45, SPIN) + S-021 (w:42, 方案生成)
-  - **P2 (unique)**: S-012 (w:45, Voice) + S-013 (w:40, Sentinel) + S-014 (w:38, Memory) + S-022 (w:28, Role-play)
-  - **P3 (mature)**: S-015 (w:30, Notifications) + S-016 (w:25, Coach) + S-023 (w:22, Manager) + S-017 (w:20, PWA) + S-018 (w:15, Design)
-- **Parallel Plan**: Wave 1 (S-007+S-008+S-009+S-018) → Wave 2 (S-019+S-010+S-012+S-013+S-014) → Wave 3 (S-020+S-021+S-011+S-022) → Wave 4 (S-015+S-016+S-023+S-017)
+  - **P2 IMPLEMENT**: S-012 (w:45, Voice) + S-013 (w:40, Sentinel) + S-014 (w:38, Memory) + S-022 (w:28, Role-play)
+  - **P2 PROBE (vision)**: S-024 (w:50, 多模态输入) + S-025 (w:48, 关系智能) + S-026 (w:45, 预见性引擎) + S-027 (w:35, 组织知识涌现)
+  - **P3 IMPLEMENT**: S-015 (w:30, Notifications) + S-016 (w:25, Coach) + S-023 (w:22, Manager) + S-017 (w:20, PWA) + S-018 (w:15, Design)
+  - **P3 PROBE (vision)**: S-028 (w:32, 情境感知) + S-029 (w:30, 渠道聚合) + S-030 (w:28, 行业知识)
+- **Parallel Plan (IMPLEMENT)**: Wave 1 (S-007+S-008+S-009+S-018) → Wave 2 (S-019+S-010+S-012+S-013+S-014) → Wave 3 (S-020+S-021+S-011+S-022) → Wave 4 (S-015+S-016+S-023+S-017)
+- **Vision Probes**: S-024~S-030 为 PROBE 类型，需先完成 IMPLEMENT 信号的核心能力后再转为 IMPLEMENT；详见 VISION_AI_ERA.md
 - **原版参考**: `/Users/bingbingbai/Desktop/salesTouch/` — 9 个 agent tool 定义, SPIN 计划, 方案生成, F&B 分析, CRM 画布
 - **Completion Milestones**:
   1. ✅ Genesis verified (Rule R-001 emerged: Foundation Genesis Verified)

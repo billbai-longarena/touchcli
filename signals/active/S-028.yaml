@@ -1,0 +1,33 @@
+# Signal S-028 — 情境感知交互
+id: S-028
+type: PROBE
+title: "Context-Aware Interaction — 时间/位置/活动/情绪感知 + 交互模式自适应 + 打扰容忍度"
+status: open
+weight: 32
+ttl_days: 60
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "frontend + backend"
+tags: [vision, context, adaptive, p3, ai-era]
+source: vision-ai-era
+
+# 愿景
+# Agent 理解"你现在的处境"，自动调整交互方式。
+# 开车时用语音、客户面前用静默、写方案时给详细数据、晚上只推紧急事项。
+# Agent 知道什么时候该说话，什么时候该安静——像一个有分寸的同事。
+
+deliverables:
+  - "时间感知：工作时间 vs 休息时间，不同时段不同推送策略"
+  - "活动模式识别：连续通话 = 忙碌，长时间静默 = 可能在会议"
+  - "交互模式切换：语音模式 / 文字模式 / 静默模式 / 摘要模式 自动切换"
+  - "打扰容忍度学习：通过用户反馈（忽略/立即查看/标记为打扰）持续学习偏好"
+  - "能量管理建议：'你今天有 3 个重要电话，建议先打最难的那个'"
+  - "情绪感知（基础版）：从用词和语调推断情绪，连续丢单时自动切换为温和模式"
+
+# 对应 VISION_AI_ERA.md 范式 E: 情境感知交互
+
+dependencies: [S-012, S-015]
+blocks: []
+estimated_days: 6-8
+touch_count: 0

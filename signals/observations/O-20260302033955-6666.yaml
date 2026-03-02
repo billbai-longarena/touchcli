@@ -1,4 +1,4 @@
-# READ-ONLY — auto-exported from .termite.db (2026-03-02T02:03:50Z)
+# READ-ONLY — auto-exported from .termite.db (2026-03-02T05:12:52Z)
 # To modify observations, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
 id: O-20260302033955-6666
 pattern: "Exclude completed signals from heartbeat active set"

@@ -1,0 +1,35 @@
+# Signal S-027 — 组织知识涌现
+id: S-027
+type: PROBE
+title: "Collective Intelligence — 跨用户模式识别 + Win/Loss 分析 + 最佳实践蒸馏 + 新人加速"
+status: open
+weight: 35
+ttl_days: 60
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service"
+tags: [vision, collective, organization, p2, ai-era]
+source: vision-ai-era
+
+# 愿景
+# 智能不局限于个人 Agent，而是在组织层面涌现。
+# 当 3 个销售独立发现同一个行业趋势 → 自动升级为组织认知。
+# 当 Top Performer 的打法被提炼 → 自动赋能给所有销售。
+# 白蚁协议的涌现规则（Rule 7）在业务层面的实现。
+
+deliverables:
+  - "跨用户模式识别：检测多人独立观察到的相同模式（行业趋势、客户顾虑、竞品动态）"
+  - "Win/Loss 自动分析：每个成交/丢单自动复盘，提取成功因子和失败因子"
+  - "最佳实践蒸馏：从 Top Performer 的行为数据中提炼可复制的 SOP"
+  - "竞品情报聚合：多个销售的竞品观察合并为实时竞品画像"
+  - "新人加速包：组织知识自动注入新人的 Agent，缩短 ramp-up 周期"
+  - "知识版本管理：过时的最佳实践自动衰减，新的实践自动升级"
+
+# 对应 VISION_AI_ERA.md 范式 D: 组织知识涌现
+# 呼应白蚁协议 Rule 7: count(agents, same_signal) ≥ 3 → EMERGE
+
+dependencies: [S-007, S-009, S-014]
+blocks: []
+estimated_days: 10-14
+touch_count: 0

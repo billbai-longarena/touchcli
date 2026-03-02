@@ -1,0 +1,33 @@
+# Signal S-024 — 多模态输入引擎
+id: S-024
+type: PROBE
+title: "Multi-Modal Input — 语音语义分析 + 图片/名片识别 + 文件解析 + 无感数据采集"
+status: open
+weight: 50
+ttl_days: 60
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend + frontend"
+tags: [vision, multimodal, perception, p2, ai-era]
+source: vision-ai-era
+
+# 愿景
+# 销售不需要"录入数据"。拍张名片、转发一段微信聊天、录一段语音备忘——
+# Agent 自动理解内容，提取实体，关联到对应的客户/商机/联系人。
+# 不是"帮我记一下"，而是 Agent 自动从行为中提取信息。
+
+deliverables:
+  - "语音语义分析：不只转写，还提取意图/实体/情绪/承诺/行动项"
+  - "图片识别：名片 OCR → 自动创建联系人；白板拍照 → 结构化笔记"
+  - "文件解析：PDF/Word/PPT → 提取产品信息、合同条款、客户需求"
+  - "消息转发处理：用户转发微信聊天截图 → 提取互动要点"
+  - "自动实体关联：从非结构化内容中识别客户/商机/联系人并自动关联"
+  - "隐私控制面板：用户决定哪些信息被采集，哪些被忽略"
+
+# 对应 VISION_AI_ERA.md 范式 A: 无感知数据采集
+
+dependencies: [S-007, S-012]
+blocks: []
+estimated_days: 8-10
+touch_count: 0
