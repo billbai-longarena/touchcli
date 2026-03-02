@@ -1,0 +1,11 @@
+# READ-ONLY — auto-exported from .termite.db (2026-03-02T05:12:52Z)
+# To modify observations, edit the DB via scripts or use: ./scripts/termite-db-reimport.sh
+id: O-20260302131157-95115
+pattern: "Legacy AIsalesAssist feature parity mapped to TouchCLI intents with data compatibility norms"
+context: "docs/protocols/salestouch-ai-sales-assist-compat.md"
+reporter: "termite:2026-03-02:worker"
+confidence: high
+created: 2026-03-02
+source: autonomous
+detail: |
+  Compared AIsalesAssistHome.vue registered entries and legacy composables/routes. Defined route->intent mapping, snake_case canonical contract, legacy envelope adapter, stage normalization, and structured content_type contract linked to S-009/S-010/S-011.
