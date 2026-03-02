@@ -26,6 +26,11 @@ deliverables:
   - "LLM 响应流式输出（SSE 或 WebSocket 推送）"
   - "LLM Gateway 抽象层（支持多模型切换）"
   - "Token 用量计量和成本控制"
+  # 原版 agentTools.ts 参考 — 9 个工具的 JSON schema 定义
+  - "工具 schema 参考原版：update_customer_name, update_opportunity_fields, update_contact_fields, create_opportunity, create_contact, create_interaction, ask_user_choice, provide_sales_advice, recommend_visit_plan"
+  - "Max iteration = 6 防止无限循环（参考原版 MAX_AGENT_TOOL_ITERATIONS）"
+  - "Context injection: 自动注入当前客户 ID（参考原版 ToolExecutionContext）"
+  - "Tool result 返回 entity type + updated fields，供前端刷新 UI（参考原版 ToolResultPayload）"
 
 # 验收标准
 acceptance:
@@ -37,7 +42,7 @@ acceptance:
   - "LLM 调用有超时和重试机制"
 
 dependencies: []
-blocks: [S-010, S-011, S-013, S-014, S-016]
+blocks: [S-010, S-011, S-013, S-014, S-016, S-019, S-020, S-021, S-022]
 estimated_days: 5-7
 
 next: "开始接入 LLM API，从 Router Agent 的意图识别开始"

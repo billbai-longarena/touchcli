@@ -1,0 +1,46 @@
+# Signal S-020 — SPIN 拜访计划生成
+id: S-020
+type: IMPLEMENT
+title: "SPIN Call Planner — AI 生成 SPIN 方法论拜访计划（Sales Agent 新工具）"
+status: open
+weight: 45
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service/agents/sales_agent.py"
+tags: [agent, spin, sales-tool, streaming, p1, from-original]
+source: audit-original-compare
+
+# 问题描述
+# 原版 SalesTouch 的 SpinCallPlannerView.vue 是销售人员高频使用的功能。
+# SPIN 方法论（Situation/Problem/Implication/Need-payoff）是专业销售拜访的标准框架。
+# TouchCLI 的 Sales Agent 工具列表中没有此功能。
+
+# 原版参考
+# - SpinCallPlannerView.vue (35,115 行，含双输入模式)
+# - POST /api/ai-sales-assist/spin-plan/generate (流式输出)
+# - 输入：客户+联系人+产品 F&B + 拜访目标 + 额外需求
+# - agentTools.ts: recommend_visit_plan 工具
+
+deliverables:
+  - "Sales Agent 新工具 generate_spin_plan"
+  - "输入参数：customer_id, contact_id, product_id(可选), visit_objective(承诺目标), extra_requirements"
+  - "SPIN 计划结构：开场策略 → Situation 问题 → Problem 问题 → Implication 问题 → Need-payoff → 承诺请求"
+  - "自动加载上下文：联系人职位/好感度 + 产品 F&B + 商机阶段"
+  - "流式输出（通过 WebSocket 推送 token-by-token）"
+  - "对话式触发：'帮我准备跟华为张总的拜访计划' → Agent 生成 SPIN 计划"
+  - "可选：额外需求注入（'重点强调 ROI', '针对技术决策者'）"
+
+acceptance:
+  - "用户说'准备拜访计划'→ Agent 询问客户/联系人/目标 → 生成完整 SPIN 计划"
+  - "SPIN 计划包含 4 个阶段各 3-5 个具体提问"
+  - "计划基于实际客户数据和产品 F&B 定制化"
+  - "流式输出，用户在生成过程中能看到逐步呈现"
+
+dependencies: [S-007, S-019]
+blocks: []
+estimated_days: 3-4
+
+next: "先定义 generate_spin_plan 工具 schema 和 prompt 模板"
+touch_count: 0

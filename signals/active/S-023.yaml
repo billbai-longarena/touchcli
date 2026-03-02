@@ -1,0 +1,43 @@
+# Signal S-023 — 管理者视图
+id: S-023
+type: IMPLEMENT
+title: "Manager Dashboard — 团队销售数据 + 业绩分析 + 排行榜（对话式呈现）"
+status: open
+weight: 22
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend + frontend"
+tags: [dashboard, analytics, manager, p3, from-original]
+source: audit-original-compare
+
+# 问题描述
+# 原版 SalesTouch 规划了"管理者视图"（Coming Soon），查看团队销售数据。
+# TouchCLI DESIGN.md 未提及管理者角色的功能。
+# B2B 场景中，销售主管需要看团队整体数据、个人排行、商机分布等。
+
+# 原版参考
+# - AIsalesAssistHome.vue: "管理者视图 — 查看团队销售数据，分析销售表现"
+# - 原版未实现，属于规划功能
+
+deliverables:
+  - "Strategy Agent 新查询工具 query_team_stats"
+  - "团队数据聚合：总商机数/金额、各阶段分布、转化率、平均周期"
+  - "个人排行：跟进数、成交数、成交金额 Top N"
+  - "趋势分析：本周/本月 vs 上周/上月对比"
+  - "对话式触发：'看一下团队这周的数据' → Agent 返回带 chart_mini 的分析"
+  - "mini chart 卡片：漏斗图、趋势图、排行榜（S-010 富消息类型支持）"
+  - "权限控制：仅 manager/admin 角色可查看团队数据"
+
+acceptance:
+  - "管理者说'本周团队数据'→ Agent 返回漏斗 + 排行 + 对比"
+  - "普通销售看不到团队数据（权限拦截）"
+  - "数据聚合响应 < 2 秒"
+
+dependencies: [S-009]
+blocks: []
+estimated_days: 3-4
+
+next: "先实现团队数据聚合 SQL 查询，再集成到 Strategy Agent"
+touch_count: 0

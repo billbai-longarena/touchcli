@@ -1,0 +1,47 @@
+# Signal S-019 — 产品知识库 + 文档管理 + F&B 分析引擎
+id: S-019
+type: IMPLEMENT
+title: "Product Knowledge Base — 产品库 + 文档上传 + F&B (Features & Benefits) AI 分析"
+status: open
+weight: 65
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend + frontend"
+tags: [product, knowledge-base, fab, document, p1, from-original]
+source: audit-original-compare
+
+# 问题描述
+# 原版 SalesTouch 的核心功能之一是产品知识库：上传产品 PDF，LLM 生成 F&B（特性与利益）分析。
+# F&B 是 SPIN 计划和销售方案生成的基础数据。TouchCLI DESIGN.md 完全未提及此功能。
+# 没有产品知识，Agent 无法回答产品相关问题、无法生成有价值的销售建议。
+
+# 原版参考
+# - ProductListView.vue + ProductDetailView.vue (CRUD + 文件上传)
+# - ProductBrowseListView.vue + ProductBrowseDetailView.vue (只读浏览)
+# - useAISalesAssist.ts (API composable)
+# - 后端 /api/ai-sales-assist/products/* 端点
+
+deliverables:
+  - "products 表：产品 CRUD (name, description, category, tags)"
+  - "product_documents 表：文档上传管理 (PDF, 图片, 视频, 音频)"
+  - "product_fab_analyses 表：F&B 分析结果存储 (含 embedding)"
+  - "文件上传 API (S3/OSS 存储，支持 PDF/媒体)"
+  - "F&B 分析 API：LLM 分析产品文档 → 结构化特性/利益输出"
+  - "F&B 分析编辑/保存功能"
+  - "产品知识注入 Agent 上下文（Agent 回答产品问题时自动检索相关 F&B）"
+  - "对话式触发：'上传产品手册' → 引导上传流程；'分析产品特性' → 生成 F&B"
+
+acceptance:
+  - "可通过对话上传产品 PDF 文件"
+  - "F&B 分析在 120 秒内完成并返回结构化结果"
+  - "Agent 回答产品问题时自动引用相关 F&B 分析"
+  - "产品文档存储到 S3/OSS，元数据在 PostgreSQL"
+
+dependencies: [S-007]
+blocks: [S-020, S-021]
+estimated_days: 5-6
+
+next: "先建 products + product_documents 表和 CRUD API，再实现 F&B 分析"
+touch_count: 0

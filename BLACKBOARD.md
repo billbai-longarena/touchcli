@@ -31,7 +31,7 @@
 | Phase 2+  | ✅ **CRITICAL PATH PREP** (JWT, seeds, tests - ready for Phase 3) | ✓ ready | 2026-03-02 Worker |
 | Phase 3   | 🟢 **IN PROGRESS** (Auth ✅, E2E 54+ tests ✅, Schema fixes ✅) | ↗️ active | 2026-03-02 Worker |
 
-## Signals (17 total: 5 completed/archived + 12 open) — Post Gap Audit 2026-03-02
+## Signals (22 total: 6 completed/archived + 16 open + 1 archived) — Post Original Compare Audit 2026-03-02
 
 ### Completed / Archived Signals
 
@@ -61,6 +61,18 @@
 | S-017 | IMPLEMENT | PWA & 离线支持（Service Worker + IndexedDB） | 20 | P3 | S-008 | unassigned |
 | S-018 | IMPLEMENT | 前端设计系统升级（TailwindCSS + 响应式 3 布局） | 15 | P3 | — | unassigned |
 
+### Open Signals — 原版对比审计 追加 (按权重降序)
+
+| ID | Type | Title | Weight | Priority | Dependencies | Owner |
+|----|------|-------|--------|----------|-------------|-------|
+| S-019 | IMPLEMENT | 产品知识库 + 文档管理 + F&B 分析引擎 | 65 | P1 | S-007 | unassigned |
+| S-020 | IMPLEMENT | SPIN 拜访计划生成（Sales Agent 新工具） | 45 | P1 | S-007, S-019 | unassigned |
+| S-021 | IMPLEMENT | 销售方案/提案生成器（多模板 + 流式输出） | 42 | P1 | S-007, S-019 | unassigned |
+| S-022 | IMPLEMENT | AI 演练/Role-play 模拟（销售场景对练） | 28 | P2 | S-007 | unassigned |
+| S-023 | IMPLEMENT | 管理者视图（团队数据仪表盘 + 业绩分析） | 22 | P3 | S-009 | unassigned |
+
+**原版参考文件**: `/Users/bingbingbai/Desktop/salesTouch/` — agentTools.ts(9 工具), SpinCallPlannerView.vue, SalesSchemeGeneratorView.vue, ProductDetailView.vue, CustomerOpportunityView.vue
+
 ## Emerged Rules
 
 | ID | Trigger | Action | Source | Hit Count | Created |
@@ -75,14 +87,15 @@
 ## Notes for AI
 
 - **Project Status**: 工程脚手架 ✅ COMPLETE → 核心智能层 🔴 NOT STARTED (DESIGN.md Phase 1-4 约 20% 完成)
-- **Gap Audit**: 2026-03-02 完成，详见 AUDIT_GAPS.md，12 个新信号已分配 (S-007~S-018)
-- **关键洞察**: 后端/前端/CI/CD 框架完整，但 Agent 全部是 keyword stub，无 LLM 集成
-- **Signal Hierarchy** (post-audit):
+- **Gap Audit**: 2026-03-02 完成，详见 AUDIT_GAPS.md (设计 vs 实现) + AUDIT_ORIGINAL_COMPARE.md (原版 vs 设计)
+- **关键洞察**: 后端/前端/CI/CD 框架完整，但 Agent 全部是 keyword stub；原版核心业务功能（产品库/SPIN/方案生成）在设计中遗漏
+- **Signal Hierarchy** (post-audit, 17 open signals):
   - **P0 (core)**: S-007 (w:80, LLM Agent) + S-008 (w:70, WebSocket E2E)
-  - **P1 (usable)**: S-009 (w:60, Data Model) + S-010 (w:55, Rich Messages) + S-011 (w:50, Human-in-Loop)
-  - **P2 (unique)**: S-012 (w:45, Voice) + S-013 (w:40, Sentinel) + S-014 (w:38, Memory)
-  - **P3 (mature)**: S-015 (w:30, Notifications) + S-016 (w:25, Coach) + S-017 (w:20, PWA) + S-018 (w:15, Design)
-- **Parallel Plan**: Wave 1 (S-007+S-008+S-009+S-018) → Wave 2 (S-010+S-012+S-013+S-014) → Wave 3 (S-011+S-015+S-016+S-017)
+  - **P1 (usable)**: S-019 (w:65, 产品知识库) + S-009 (w:60, Data Model) + S-010 (w:55, Rich Messages) + S-011 (w:50, Human-in-Loop) + S-020 (w:45, SPIN) + S-021 (w:42, 方案生成)
+  - **P2 (unique)**: S-012 (w:45, Voice) + S-013 (w:40, Sentinel) + S-014 (w:38, Memory) + S-022 (w:28, Role-play)
+  - **P3 (mature)**: S-015 (w:30, Notifications) + S-016 (w:25, Coach) + S-023 (w:22, Manager) + S-017 (w:20, PWA) + S-018 (w:15, Design)
+- **Parallel Plan**: Wave 1 (S-007+S-008+S-009+S-018) → Wave 2 (S-019+S-010+S-012+S-013+S-014) → Wave 3 (S-020+S-021+S-011+S-022) → Wave 4 (S-015+S-016+S-023+S-017)
+- **原版参考**: `/Users/bingbingbai/Desktop/salesTouch/` — 9 个 agent tool 定义, SPIN 计划, 方案生成, F&B 分析, CRM 画布
 - **Completion Milestones**:
   1. ✅ Genesis verified (Rule R-001 emerged: Foundation Genesis Verified)
   2. ✅ Phase 1 complete (1,887 lines specifications)

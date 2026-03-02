@@ -1,0 +1,43 @@
+# Signal S-022 — AI 演练/Role-play 模拟
+id: S-022
+type: IMPLEMENT
+title: "AI Role-play — 模拟客户场景对练（Sales Agent 演练模式）"
+status: open
+weight: 28
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service/agents/sales_agent.py"
+tags: [agent, roleplay, training, p2, from-original]
+source: audit-original-compare
+
+# 问题描述
+# 原版 SalesTouch 规划了"AI 演练"功能（Coming Soon），模拟真实销售场景对练。
+# DESIGN.md 5.2 Sales Agent 有 role_play 工具描述但仅一行。
+# 对话式界面天然适合 role-play，这是 TouchCLI 的差异化优势。
+
+# 原版参考
+# - AIsalesAssistHome.vue: "AI 演练 — 模拟真实销售场景，进行 AI 对练"
+# - 原版未实现，属于规划功能
+
+deliverables:
+  - "Sales Agent 演练模式：Agent 扮演客户角色（采购经理/技术负责人/CEO 等）"
+  - "场景配置：基于真实客户数据生成演练场景（客户画像 + 商机阶段 + 历史互动）"
+  - "角色定制：Agent 模拟不同性格（支持/中立/反对），不同关注点"
+  - "演练评估：结束后 Agent 给出评价（话术评分 + 改进建议 + 关键时刻回顾）"
+  - "对话式触发：'跟我练一下华为的项目' → Agent 进入角色 → 用户练习 → 评估"
+  - "退出机制：用户说'结束演练'退出"
+
+acceptance:
+  - "用户说'练一下'→ Agent 询问场景 → 进入角色扮演"
+  - "Agent 能扮演不同态度的客户（质疑/犹豫/积极）"
+  - "演练结束后给出 3-5 条改进建议"
+  - "演练对话不混入正常对话历史"
+
+dependencies: [S-007]
+blocks: []
+estimated_days: 3-4
+
+next: "设计演练模式的 State Machine（进入→对练→评估→退出）"
+touch_count: 0

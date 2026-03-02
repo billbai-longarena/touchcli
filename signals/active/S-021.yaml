@@ -1,0 +1,46 @@
+# Signal S-021 — 销售方案/提案生成器
+id: S-021
+type: IMPLEMENT
+title: "Sales Proposal Generator — AI 生成定制化销售方案（多模板 + 配色 + 流式输出）"
+status: open
+weight: 42
+ttl_days: 30
+created: 2026-03-02
+last_touched: 2026-03-02
+owner: unassigned
+module: "backend/python/agent_service/agents/sales_agent.py"
+tags: [agent, proposal, sales-tool, streaming, p1, from-original]
+source: audit-original-compare
+
+# 问题描述
+# 原版 SalesSchemeGeneratorView.vue (56,086 行) 是直接产出成交物的功能。
+# 销售方案/提案是 Agent "帮用户做事"的最直接体现。
+# DESIGN.md 5.2 Sales Agent 工具列表中 generate_proposal 只有一行描述。
+
+# 原版参考
+# - SalesSchemeGeneratorView.vue (多模板 + 配色 + Logo + 流式)
+# - POST /api/ai-sales-assist/scheme/generate
+# - 输入：商机数据 + F&B 分析 + 风格模板 + 配色方案 + Logo + 额外需求
+# - 3 种风格：Apple 现代风、商务正式风、国央企风
+
+deliverables:
+  - "Sales Agent 新工具 generate_proposal"
+  - "输入参数：customer_id, opportunity_id, product_ids[], style(modern/formal/enterprise), extra_requirements"
+  - "自动加载上下文：商机数据 + 客户信息 + 产品 F&B + 联系人决策链"
+  - "Markdown 格式输出（可导出 PDF）"
+  - "流式生成（通过 WebSocket 推送）"
+  - "对话式触发：'帮我给华为写一个销售方案' → Agent 确认参数 → 生成方案"
+  - "方案结构：封面 → 客户背景 → 需求分析 → 方案概述 → 产品特性 → 价值主张 → 报价 → 下一步"
+
+acceptance:
+  - "用户说'写一个方案'→ Agent 询问客户/产品/风格 → 生成完整提案"
+  - "方案融合客户实际商机数据和产品 F&B"
+  - "方案长度 2000-5000 字，结构完整"
+  - "流式输出，生成过程中用户可见"
+
+dependencies: [S-007, S-019]
+blocks: []
+estimated_days: 3-4
+
+next: "先定义 generate_proposal 工具 schema，设计方案结构模板"
+touch_count: 0

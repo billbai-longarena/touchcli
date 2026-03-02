@@ -17,8 +17,11 @@ source: audit-gap-analysis
 # conversations, messages, agent_states）。缺少 5 张关键业务表。
 
 deliverables:
-  - "contacts 表：联系人管理（name, title, role, attitude, customer_id）"
-  - "interactions 表：互动记录（type, summary, sentiment, next_action）"
+  - "contacts 表：联系人管理（name, title, role, attitude, customer_id, favorability 0-100, orgNeeds, personalNeeds）— 参考原版 agentTools.ts"
+  - "interactions 表：互动记录（type[电话/邮件/会议/拜访/微信/其他], content, interactionDate, summary, sentiment, next_action）"
+  - "products 表：产品库（name, description, category, tags）— 参考原版 ProductListView.vue"
+  - "product_documents 表：产品文档管理（filename, file_path, file_size, file_type）"
+  - "product_fab_analyses 表：F&B 分析结果（fab_content, embedding, prompt）"
   - "memories 表：Agent 记忆（content, embedding VECTOR(1536), importance, decay_rate）"
   - "notifications 表：通知队列（type, priority P0-P3, status, scheduled_at）"
   - "organizations 表：多租户（name, plan, settings JSONB）"
@@ -37,8 +40,8 @@ acceptance:
   - "现有测试不回归"
 
 dependencies: []
-blocks: [S-013, S-014, S-015]
-estimated_days: 3-4
+blocks: [S-013, S-014, S-015, S-019, S-020, S-021, S-023]
+estimated_days: 4-5
 
 next: "从 contacts 和 interactions 表开始，这两个是 Agent 工作的基础数据"
 touch_count: 0
