@@ -17,6 +17,9 @@ export interface AuthState {
 
   setUser: (user: User) => void;
   setToken: (token: string) => void;
+  loginWithPassword: (account: string, password: string) => Promise<void>;
+  sendSmsCode: (phone: string) => Promise<{ expiresIn: number; devCode?: string }>;
+  loginWithSms: (phone: string, code: string) => Promise<void>;
   login: (userId: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
@@ -40,6 +43,109 @@ export const useAuthStore = create<AuthState>()(
         set({ token });
       },
 
+      loginWithPassword: async (account: string, password: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/auth/password-login`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ account, password }),
+            }
+          );
+
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.detail || `Login failed: ${response.statusText}`);
+          }
+
+          const { access_token, user_id, user } = data;
+          set({
+            token: access_token,
+            user: user || { id: user_id },
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Login failed';
+          set({
+            error: message,
+            isLoading: false,
+            token: null,
+            user: null,
+            isAuthenticated: false,
+          });
+          throw err;
+        }
+      },
+
+      sendSmsCode: async (phone: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/auth/sms/send-code`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ phone }),
+            }
+          );
+
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.detail || `Send code failed: ${response.statusText}`);
+          }
+
+          set({ isLoading: false });
+          return {
+            expiresIn: Number(data?.expires_in ?? 60),
+            devCode: typeof data?.dev_code === 'string' ? data.dev_code : undefined,
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Failed to send verification code';
+          set({ error: message, isLoading: false });
+          throw err;
+        }
+      },
+
+      loginWithSms: async (phone: string, code: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/auth/sms-login`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ phone, code }),
+            }
+          );
+
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.detail || `Login failed: ${response.statusText}`);
+          }
+
+          const { access_token, user_id, user } = data;
+          set({
+            token: access_token,
+            user: user || { id: user_id },
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Login failed';
+          set({
+            error: message,
+            isLoading: false,
+            token: null,
+            user: null,
+            isAuthenticated: false,
+          });
+          throw err;
+        }
+      },
+
       login: async (userId: string) => {
         set({ isLoading: true, error: null });
         try {
@@ -48,16 +154,16 @@ export const useAuthStore = create<AuthState>()(
             { method: 'POST' }
           );
 
+          const data = await response.json().catch(() => ({}));
           if (!response.ok) {
-            throw new Error(`Login failed: ${response.statusText}`);
+            throw new Error(data?.detail || `Login failed: ${response.statusText}`);
           }
 
-          const data = await response.json();
-          const { access_token, user_id } = data;
+          const { access_token, user_id, user } = data;
 
           set({
             token: access_token,
-            user: { id: user_id },
+            user: user || { id: user_id },
             isAuthenticated: true,
             isLoading: false,
           });

@@ -115,4 +115,60 @@ describe('authStore', () => {
       expect(state.isAuthenticated).toBe(false);
     });
   });
+
+  describe('password + sms auth actions', () => {
+    it('should login with password endpoint', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            access_token: 'pwd-token',
+            user_id: 'user-1',
+            user: { id: 'user-1', name: 'Alice' },
+          }),
+        })
+      );
+
+      await useAuthStore.getState().loginWithPassword('alice', 'touchcli123');
+      const state = useAuthStore.getState();
+      expect(state.isAuthenticated).toBe(true);
+      expect(state.token).toBe('pwd-token');
+      expect(state.user?.id).toBe('user-1');
+    });
+
+    it('should return countdown and dev code from sendSmsCode', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ expires_in: 300, dev_code: '123456' }),
+        })
+      );
+
+      const result = await useAuthStore.getState().sendSmsCode('+1-555-0101');
+      expect(result.expiresIn).toBe(300);
+      expect(result.devCode).toBe('123456');
+    });
+
+    it('should login with sms endpoint', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            access_token: 'sms-token',
+            user_id: 'user-2',
+            user: { id: 'user-2', name: 'Bob' },
+          }),
+        })
+      );
+
+      await useAuthStore.getState().loginWithSms('+1-555-0102', '654321');
+      const state = useAuthStore.getState();
+      expect(state.isAuthenticated).toBe(true);
+      expect(state.token).toBe('sms-token');
+      expect(state.user?.id).toBe('user-2');
+    });
+  });
 });

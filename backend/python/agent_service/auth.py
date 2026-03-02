@@ -10,7 +10,7 @@ from uuid import UUID
 
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # Configuration
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
@@ -93,7 +93,9 @@ def verify_token(token: str) -> UUID:
         )
 
 
-async def get_current_user(credentials: HTTPAuthCredentials = Depends(security)) -> UUID:
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> UUID:
     """
     FastAPI dependency to extract and validate the current user from JWT token.
 

@@ -1,31 +1,90 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/LoginPage.css';
 
+type LoginMode = 'sms' | 'password';
+
 export function Login() {
-  const { login, isLoading, error, clearError } = useAuth();
-  const [userId, setUserId] = useState('');
-  const [emailInput, setEmailInput] = useState('');
+  const { loginWithPassword, sendSmsCode, loginWithSms, isLoading, error, clearError } = useAuth();
+  const [mode, setMode] = useState<LoginMode>('sms');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearError();
+  const [account, setAccount] = useState('');
+  const [password, setPassword] = useState('');
 
-    if (!userId && !emailInput) {
-      alert('Please enter a user ID or email');
+  const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const [countdown, setCountdown] = useState(0);
+  const [devCodeHint, setDevCodeHint] = useState('');
+  const [localError, setLocalError] = useState('');
+
+  useEffect(() => {
+    if (countdown <= 0) {
       return;
     }
 
-    const id = userId || mapEmailToUserId(emailInput);
-    if (!id) {
-      alert('User not found. Please use a valid UUID from the database.');
+    const timer = window.setInterval(() => {
+      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [countdown]);
+
+  const canSubmitPassword = useMemo(() => account.trim().length > 0 && password.length > 0, [account, password]);
+  const canSubmitSms = useMemo(() => phone.trim().length > 0 && code.trim().length > 0, [phone, code]);
+
+  const handleSendCode = async () => {
+    clearError();
+    setLocalError('');
+    setDevCodeHint('');
+
+    const phoneValue = phone.trim();
+    if (!phoneValue) {
+      setLocalError('Please enter your phone number first.');
       return;
     }
 
     try {
-      await login(id);
-    } catch (err) {
-      // Error is handled and displayed
+      const result = await sendSmsCode(phoneValue);
+      setCountdown(result.expiresIn > 0 ? result.expiresIn : 60);
+      setDevCodeHint(result.devCode ? `Dev code: ${result.devCode}` : '');
+    } catch {
+      // Store-level error handles server message
+    }
+  };
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    clearError();
+    setLocalError('');
+
+    if (!canSubmitPassword) {
+      setLocalError('Please enter account and password.');
+      return;
+    }
+
+    try {
+      await loginWithPassword(account.trim(), password);
+    } catch {
+      // Store-level error handles server message
+    }
+  };
+
+  const handleSmsLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    clearError();
+    setLocalError('');
+
+    if (!canSubmitSms) {
+      setLocalError('Please enter phone and verification code.');
+      return;
+    }
+
+    try {
+      await loginWithSms(phone.trim(), code.trim());
+    } catch {
+      // Store-level error handles server message
     }
   };
 
@@ -37,72 +96,139 @@ export function Login() {
           <p>Conversational Sales Assistant</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="userId">User ID (UUID)</label>
-            <input
-              id="userId"
-              type="text"
-              placeholder="Paste your user UUID here"
-              value={userId}
-              onChange={(e) => {
-                setUserId(e.target.value);
-                clearError();
-              }}
-              disabled={isLoading}
-              className="form-input"
-            />
-          </div>
-
-          <div className="form-divider">or</div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email (Demo)</label>
-            <input
-              id="email"
-              type="email"
-              placeholder="e.g., alice@test.local"
-              value={emailInput}
-              onChange={(e) => {
-                setEmailInput(e.target.value);
-                clearError();
-              }}
-              disabled={isLoading}
-              className="form-input"
-            />
-            <small className="form-hint">
-              Demo users: alice@test.local, bob@test.local, carol@test.local
-            </small>
-          </div>
-
-          {error && <div className="form-error">{error}</div>}
-
+        <div className="login-tabs">
           <button
-            type="submit"
-            disabled={isLoading || (!userId && !emailInput)}
-            className="form-button"
+            type="button"
+            className={`login-tab ${mode === 'sms' ? 'active' : ''}`}
+            onClick={() => {
+              setMode('sms');
+              setLocalError('');
+              clearError();
+            }}
+            disabled={isLoading}
           >
-            {isLoading ? 'Signing in...' : 'Continue'}
+            SMS Login
           </button>
-        </form>
+          <button
+            type="button"
+            className={`login-tab ${mode === 'password' ? 'active' : ''}`}
+            onClick={() => {
+              setMode('password');
+              setLocalError('');
+              clearError();
+            }}
+            disabled={isLoading}
+          >
+            Password Login
+          </button>
+        </div>
+
+        {mode === 'sms' ? (
+          <form onSubmit={handleSmsLogin} className="login-form">
+            <div className="form-group">
+              <label htmlFor="phone">Phone</label>
+              <input
+                id="phone"
+                type="text"
+                placeholder="e.g., +1-555-0101"
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  setLocalError('');
+                  clearError();
+                }}
+                disabled={isLoading}
+                className="form-input"
+              />
+              <small className="form-hint">Demo phones: +1-555-0101 / +1-555-0102 / +1-555-0103</small>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="code">Verification Code</label>
+              <div className="code-row">
+                <input
+                  id="code"
+                  type="text"
+                  placeholder="Enter code"
+                  value={code}
+                  onChange={(e) => {
+                    setCode(e.target.value);
+                    setLocalError('');
+                    clearError();
+                  }}
+                  disabled={isLoading}
+                  className="form-input"
+                />
+                <button
+                  type="button"
+                  className="code-button"
+                  onClick={handleSendCode}
+                  disabled={isLoading || countdown > 0}
+                >
+                  {countdown > 0 ? `Resend (${countdown}s)` : 'Send Code'}
+                </button>
+              </div>
+              {devCodeHint && <small className="form-hint">{devCodeHint}</small>}
+            </div>
+
+            {localError && <div className="form-error">{localError}</div>}
+            {error && <div className="form-error">{error}</div>}
+
+            <button type="submit" disabled={isLoading || !canSubmitSms} className="form-button">
+              {isLoading ? 'Signing in...' : 'Login'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handlePasswordLogin} className="login-form">
+            <div className="form-group">
+              <label htmlFor="account">Username / Email / Phone</label>
+              <input
+                id="account"
+                type="text"
+                placeholder="e.g., alice"
+                value={account}
+                onChange={(e) => {
+                  setAccount(e.target.value);
+                  setLocalError('');
+                  clearError();
+                }}
+                disabled={isLoading}
+                className="form-input"
+              />
+              <small className="form-hint">Demo account: alice / bob / carol</small>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setLocalError('');
+                  clearError();
+                }}
+                disabled={isLoading}
+                className="form-input"
+              />
+              <small className="form-hint">Demo password: touchcli123</small>
+            </div>
+
+            {localError && <div className="form-error">{localError}</div>}
+            {error && <div className="form-error">{error}</div>}
+
+            <button type="submit" disabled={isLoading || !canSubmitPassword} className="form-button">
+              {isLoading ? 'Signing in...' : 'Login'}
+            </button>
+          </form>
+        )}
 
         <div className="login-footer">
-          <p>
-            For development: Get a test user UUID from the database by running:
-            <code>python -m agent_service.seeds</code>
-          </p>
+          <p>Reference mode from SalesTouch: password login + SMS code login.</p>
         </div>
       </div>
     </div>
   );
-}
-
-function mapEmailToUserId(email: string): string | null {
-  const demoUsers: Record<string, string> = {
-    'alice@test.local': '550e8400-e29b-41d4-a716-446655440001',
-    'bob@test.local': '550e8400-e29b-41d4-a716-446655440002',
-    'carol@test.local': '550e8400-e29b-41d4-a716-446655440003',
-  };
-
-  return demoUsers[email.toLowerCase()] || null;
 }

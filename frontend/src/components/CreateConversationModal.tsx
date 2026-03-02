@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useConversationStore } from '../store/conversationStore';
 import '../styles/CreateConversationModal.css';
 
@@ -14,6 +14,15 @@ export function CreateConversationModal({ isOpen, onClose, preselectedCustomerId
   const [selectedCustomerId, setSelectedCustomerId] = useState(preselectedCustomerId || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Sync form state when modal opens or preselectedCustomerId changes
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedCustomerId(preselectedCustomerId || '');
+      setTitle('');
+      setError('');
+    }
+  }, [isOpen, preselectedCustomerId]);
 
   const { customers, createConversation } = useConversationStore();
 

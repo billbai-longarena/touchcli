@@ -43,6 +43,27 @@ class UserResponse(BaseModel):
 
 
 # ============================================================================
+# Authentication Schemas
+# ============================================================================
+
+class PasswordLoginRequest(BaseModel):
+    """Password login request"""
+    account: str = Field(..., min_length=1, max_length=255)
+    password: str = Field(..., min_length=1, max_length=255)
+
+
+class SendSmsCodeRequest(BaseModel):
+    """SMS verification code request"""
+    phone: str = Field(..., min_length=3, max_length=32)
+
+
+class SmsLoginRequest(BaseModel):
+    """SMS login request"""
+    phone: str = Field(..., min_length=3, max_length=32)
+    code: str = Field(..., min_length=4, max_length=6)
+
+
+# ============================================================================
 # Customer Schemas
 # ============================================================================
 
@@ -97,45 +118,37 @@ class CustomerDetail(CustomerResponse):
 class OpportunityCreate(BaseModel):
     """Opportunity creation request"""
     customer_id: UUID
-    name: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
+    title: str = Field(..., min_length=1, max_length=255)
     amount: float = Field(..., gt=0)
-    currency: str = Field(default="CNY", max_length=3)
-    status: str = Field(default="discovery", pattern="^(discovery|proposal|negotiation|closed_won|closed_lost)$")
-    probability: float = Field(default=0.0, ge=0.0, le=1.0)
-    expected_close_date: Optional[datetime] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    stage: str = Field(default="prospecting")
+    notes: Optional[str] = None
+    close_date: Optional[datetime] = None
 
 
 class OpportunityUpdate(BaseModel):
     """Opportunity update request"""
-    name: Optional[str] = Field(None, max_length=255)
-    description: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=255)
     amount: Optional[float] = Field(None, gt=0)
-    currency: Optional[str] = Field(None, max_length=3)
-    status: Optional[str] = Field(None, pattern="^(discovery|proposal|negotiation|closed_won|closed_lost)$")
-    probability: Optional[float] = Field(None, ge=0.0, le=1.0)
-    expected_close_date: Optional[datetime] = None
-    metadata: Optional[Dict[str, Any]] = None
+    stage: Optional[str] = None
+    notes: Optional[str] = None
+    close_date: Optional[datetime] = None
 
 
 class OpportunityResponse(BaseModel):
     """Opportunity response"""
     id: UUID
     customer_id: UUID
-    name: str
-    description: Optional[str]
-    amount: float
-    currency: str
-    status: str
-    probability: float
-    expected_close_date: Optional[datetime]
-    metadata: Dict[str, Any] = Field(alias="metadata_json")
+    title: str
+    amount: float = Field(validation_alias="value")
+    stage: str
+    notes: Optional[str] = None
+    close_date: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 
 class OpportunityDetail(OpportunityResponse):
@@ -151,6 +164,7 @@ class ConversationCreate(BaseModel):
     """Conversation creation request"""
     customer_id: Optional[UUID] = None
     opportunity_id: Optional[UUID] = None
+    title: Optional[str] = Field(None, max_length=255)
     mode: str = Field(default="text", pattern="^(text|voice|hybrid)$")
     locale: Optional[str] = Field(default=None, pattern="^[a-z]{2}-[A-Z]{2}$")
 
@@ -167,6 +181,7 @@ class ConversationResponse(BaseModel):
     user_id: UUID
     customer_id: Optional[UUID]
     opportunity_id: Optional[UUID]
+    title: Optional[str] = None
     locale: Optional[str]
     mode: str
     status: str

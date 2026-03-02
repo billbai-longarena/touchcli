@@ -18,8 +18,17 @@ export function useAuth() {
     }
   }, [store.isAuthenticated, navigate]);
 
-  const login = async (userId: string) => {
-    await store.login(userId);
+  const loginWithPassword = async (account: string, password: string) => {
+    await store.loginWithPassword(account, password);
+    navigate('/');
+  };
+
+  const sendSmsCode = async (phone: string) => {
+    return store.sendSmsCode(phone);
+  };
+
+  const loginWithSms = async (phone: string, code: string) => {
+    await store.loginWithSms(phone, code);
     navigate('/');
   };
 
@@ -34,7 +43,9 @@ export function useAuth() {
     isAuthenticated: store.isAuthenticated,
     isLoading: store.isLoading,
     error: store.error,
-    login,
+    loginWithPassword,
+    sendSmsCode,
+    loginWithSms,
     logout,
     clearError: store.clearError,
   };

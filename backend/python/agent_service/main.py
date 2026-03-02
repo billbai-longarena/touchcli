@@ -3,17 +3,18 @@ TouchCLI Agent Service - FastAPI Backend
 Phase 2: Backend Infrastructure Implementation
 """
 
-from fastapi import FastAPI, Depends, HTTPException, status, Header
+from fastapi import FastAPI, Depends, HTTPException, status, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, text
 import os
-from typing import Optional, List
+from typing import Optional, List, Dict
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
+import secrets
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -27,27 +28,29 @@ from prometheus_client import CollectorRegistry, generate_latest
 # Import from local modules (use relative imports for package)
 try:
     # When running as module
-    from .db import get_db, engine, init_db, get_db_health
+    from .db import get_db, engine, init_db
     from .models import (
         Base, User, Customer, Opportunity, Conversation, Message, AgentState, ActivityLog
     )
     from .schemas import (
         ConversationCreate, ConversationResponse, MessageCreate, MessageResponse,
         CustomerCreate, CustomerResponse, OpportunityCreate, OpportunityResponse,
-        HealthCheckResponse, ComponentHealth
+        HealthCheckResponse, ComponentHealth, PasswordLoginRequest,
+        SendSmsCodeRequest, SmsLoginRequest
     )
     from .workflow import ConversationWorkflow
     from .auth import get_current_user, create_token
 except ImportError:
     # Fallback for direct execution
-    from db import get_db, engine, init_db, get_db_health
+    from db import get_db, engine, init_db
     from models import (
         Base, User, Customer, Opportunity, Conversation, Message, AgentState, ActivityLog
     )
     from schemas import (
         ConversationCreate, ConversationResponse, MessageCreate, MessageResponse,
         CustomerCreate, CustomerResponse, OpportunityCreate, OpportunityResponse,
-        HealthCheckResponse, ComponentHealth
+        HealthCheckResponse, ComponentHealth, PasswordLoginRequest,
+        SendSmsCodeRequest, SmsLoginRequest
     )
     from workflow import ConversationWorkflow
     from auth import get_current_user, create_token
@@ -179,7 +182,8 @@ agent_response_time_seconds = Histogram(
 logger.info("Prometheus metrics initialized")
 
 # Rate Limiting Configuration
-limiter = Limiter(key_func=get_remote_address)
+_rate_limit_enabled = os.getenv("RATE_LIMIT_ENABLED", "true").lower() != "false"
+limiter = Limiter(key_func=get_remote_address, enabled=_rate_limit_enabled)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(
     status_code=429,
@@ -208,9 +212,180 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 # Authentication
 # ============================================================================
 
+SMS_CODE_TTL_SECONDS = int(os.getenv("SMS_CODE_TTL_SECONDS", "300"))
+DEMO_LOGIN_PASSWORD = os.getenv("DEMO_LOGIN_PASSWORD", "touchcli123")
+AUTH_ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+SMS_CODE_STORE: Dict[str, Dict[str, object]] = {}
+
+
+def _normalize_phone(value: str) -> str:
+    return "".join(ch for ch in value if ch.isdigit())
+
+
+def _user_summary(user: User) -> Dict[str, str]:
+    return {
+        "id": str(user.id),
+        "name": user.name,
+        "email": user.email,
+        "role": user.role,
+    }
+
+
+def _find_user_by_account(db: Session, account: str) -> Optional[User]:
+    account_norm = account.strip().lower()
+    if not account_norm:
+        return None
+
+    account_phone = _normalize_phone(account_norm)
+    users = db.query(User).all()
+
+    for user in users:
+        email = (user.email or "").strip().lower()
+        name = (user.name or "").strip().lower()
+        phone = _normalize_phone(user.phone_number or "")
+        email_local = email.split("@")[0] if "@" in email else email
+        first_name = name.split(" ")[0] if name else ""
+
+        candidates = {
+            email,
+            email_local,
+            email_local.replace(".", ""),
+            name,
+            name.replace(" ", ""),
+            first_name,
+        }
+
+        if account_norm in candidates:
+            return user
+
+        if account_phone and phone and account_phone == phone:
+            return user
+
+    return None
+
+
+def _find_user_by_phone(db: Session, phone: str) -> Optional[User]:
+    normalized = _normalize_phone(phone)
+    if not normalized:
+        return None
+
+    users = db.query(User).all()
+    for user in users:
+        user_phone = _normalize_phone(user.phone_number or "")
+        if user_phone and user_phone == normalized:
+            return user
+    return None
+
+
+def _serialize_customer(customer: Customer) -> Dict[str, object]:
+    """Shape customer payload to the current frontend contract."""
+    return {
+        "id": str(customer.id),
+        "user_id": "",
+        "name": customer.name,
+        "email": customer.email or "",
+        "phone": customer.phone,
+        "created_at": customer.created_at.isoformat() if customer.created_at else None,
+        "updated_at": customer.updated_at.isoformat() if customer.updated_at else None,
+    }
+
+
+@app.post("/auth/password-login")
+@limiter.limit("5/minute")
+async def password_login(
+    request: Request,
+    payload: PasswordLoginRequest,
+    db: Session = Depends(get_db),
+):
+    """Password login with account (username/email/phone) + password."""
+    user = _find_user_by_account(db, payload.account)
+    if not user or payload.password != DEMO_LOGIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    token = create_token(user.id)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user_id": str(user.id),
+        "user": _user_summary(user),
+    }
+
+
+@app.post("/auth/sms/send-code")
+@limiter.limit("10/minute")
+async def send_sms_code(
+    request: Request,
+    payload: SendSmsCodeRequest,
+    db: Session = Depends(get_db),
+):
+    """Send SMS verification code for login."""
+    user = _find_user_by_phone(db, payload.phone)
+    if not user:
+        raise HTTPException(status_code=404, detail="Phone number not found")
+
+    code = f"{secrets.randbelow(1000000):06d}"
+    phone_key = _normalize_phone(payload.phone)
+    SMS_CODE_STORE[phone_key] = {
+        "code": code,
+        "expires_at": datetime.utcnow() + timedelta(seconds=SMS_CODE_TTL_SECONDS),
+        "user_id": str(user.id),
+    }
+
+    response = {
+        "message": "Verification code sent",
+        "expires_in": SMS_CODE_TTL_SECONDS,
+    }
+    if AUTH_ENVIRONMENT != "production":
+        response["dev_code"] = code
+    return response
+
+
+@app.post("/auth/sms-login")
+@limiter.limit("10/minute")
+async def sms_login(
+    request: Request,
+    payload: SmsLoginRequest,
+    db: Session = Depends(get_db),
+):
+    """Login with SMS code."""
+    phone_key = _normalize_phone(payload.phone)
+    record = SMS_CODE_STORE.get(phone_key)
+    if not record:
+        raise HTTPException(status_code=400, detail="Verification code not sent or expired")
+
+    expires_at = record.get("expires_at")
+    code = str(record.get("code", ""))
+    if not isinstance(expires_at, datetime) or datetime.utcnow() > expires_at:
+        SMS_CODE_STORE.pop(phone_key, None)
+        raise HTTPException(status_code=400, detail="Verification code expired")
+
+    if payload.code.strip() != code:
+        raise HTTPException(status_code=401, detail="Invalid verification code")
+
+    user_id = record.get("user_id")
+    user = None
+    if user_id:
+        try:
+            user = db.query(User).filter(User.id == UUID(str(user_id))).first()
+        except ValueError:
+            user = None
+    if not user:
+        user = _find_user_by_phone(db, payload.phone)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    SMS_CODE_STORE.pop(phone_key, None)
+    token = create_token(user.id)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user_id": str(user.id),
+        "user": _user_summary(user),
+    }
+
 @app.post("/login")
 @limiter.limit("5/minute")
-async def login(request, user_id: UUID, db: Session = Depends(get_db)):
+async def login(request: Request, user_id: UUID, db: Session = Depends(get_db)):
     """
     Generate JWT token for a user.
 
@@ -278,7 +453,7 @@ async def health_check(db: Session = Depends(get_db)):
     db_error = None
     try:
         start = time.time()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db_latency = int((time.time() - start) * 1000)
     except Exception as e:
         db_status = "error"
@@ -337,7 +512,7 @@ async def health_check(db: Session = Depends(get_db)):
 
 @app.post("/conversations", response_model=ConversationResponse, status_code=201)
 @limiter.limit("30/minute")
-async def create_conversation(request,
+async def create_conversation(request: Request,
     req: ConversationCreate,
     db: Session = Depends(get_db),
     user_id: UUID = Depends(get_current_user),
@@ -385,6 +560,7 @@ async def create_conversation(request,
         user_id=user_id,
         customer_id=req.customer_id,
         opportunity_id=req.opportunity_id,
+        title=req.title,
         mode=req.mode,
         locale=resolved_locale,
         metadata_json={"locale": resolved_locale},
@@ -397,10 +573,27 @@ async def create_conversation(request,
     return conversation
 
 
+@app.get("/conversations", response_model=List[ConversationResponse])
+@limiter.limit("60/minute")
+async def list_conversations(
+    request: Request,
+    db: Session = Depends(get_db),
+    user_id: UUID = Depends(get_current_user),
+):
+    """List conversations for the authenticated user."""
+    conversations = (
+        db.query(Conversation)
+        .filter(Conversation.user_id == user_id)
+        .order_by(desc(Conversation.updated_at))
+        .all()
+    )
+    return conversations
+
+
 @app.get("/conversations/{conversation_id}", response_model=ConversationResponse)
 @limiter.limit("60/minute")
 async def get_conversation(
-    request,
+    request: Request,
     conversation_id: UUID,
     db: Session = Depends(get_db)
 ):
@@ -426,7 +619,7 @@ async def get_conversation(
 @app.post("/messages", status_code=202)
 @limiter.limit("100/minute")
 async def send_message(
-    request,
+    request: Request,
     req: MessageCreate,
     db: Session = Depends(get_db),
     sender_id: UUID = Depends(get_current_user)
@@ -509,7 +702,7 @@ async def send_message(
 @app.get("/conversations/{conversation_id}/messages")
 @limiter.limit("60/minute")
 async def get_messages(
-    request,
+    request: Request,
     conversation_id: UUID,
     limit: int = 50,
     offset: int = 0,
@@ -556,7 +749,7 @@ async def get_messages(
 @app.post("/opportunities", response_model=OpportunityResponse, status_code=201)
 @limiter.limit("30/minute")
 async def create_opportunity(
-    request,
+    request: Request,
     req: OpportunityCreate,
     db: Session = Depends(get_db)
 ):
@@ -581,14 +774,11 @@ async def create_opportunity(
     # Create opportunity
     opportunity = Opportunity(
         customer_id=req.customer_id,
-        name=req.name,
-        description=req.description,
-        amount=req.amount,
-        currency=req.currency,
-        status=req.status,
-        probability=req.probability,
-        expected_close_date=req.expected_close_date,
-        metadata_json=req.metadata
+        title=req.title,
+        value=req.amount,
+        stage=req.stage,
+        notes=req.notes,
+        close_date=req.close_date,
     )
     db.add(opportunity)
     db.commit()
@@ -601,7 +791,7 @@ async def create_opportunity(
 @app.get("/opportunities")
 @limiter.limit("60/minute")
 async def list_opportunities(
-    request,
+    request: Request,
     status: Optional[str] = None,
     customer_id: Optional[UUID] = None,
     limit: int = 50,
@@ -623,7 +813,7 @@ async def list_opportunities(
     query = db.query(Opportunity)
 
     if status:
-        query = query.filter(Opportunity.status == status)
+        query = query.filter(Opportunity.stage == status)
 
     if customer_id:
         query = query.filter(Opportunity.customer_id == customer_id)
@@ -634,43 +824,62 @@ async def list_opportunities(
     limit = min(limit, 500)  # Cap at 500
     opportunities = query.offset(offset).limit(limit).all()
 
-    return {
-        "opportunities": [OpportunityResponse.model_validate(o, from_attributes=True) for o in opportunities],
-        "total": total,
-        "offset": offset,
-        "limit": limit
-    }
+    return [OpportunityResponse.model_validate(o, from_attributes=True) for o in opportunities]
 
 # ============================================================================
 # Customer Endpoints
 # ============================================================================
 
-@app.post("/customers", response_model=CustomerResponse, status_code=201)
+@app.post("/customers", status_code=201)
 @limiter.limit("30/minute")
 async def create_customer(
-    request,
+    request: Request,
     req: CustomerCreate,
     db: Session = Depends(get_db)
 ):
     """Create a customer"""
-    payload = req.dict()
-    payload["metadata_json"] = payload.pop("metadata", {})
-    customer = Customer(**payload)
+    customer = Customer(
+        name=req.name,
+        email=req.email,
+        phone=req.phone,
+        company=(req.metadata or {}).get("company") if isinstance(req.metadata, dict) else None,
+        industry=(req.metadata or {}).get("industry") if isinstance(req.metadata, dict) else None,
+        metadata_json=req.metadata or {},
+    )
     db.add(customer)
     db.commit()
     db.refresh(customer)
     logger.info(f"Created customer {customer.id}")
-    return customer
+    return _serialize_customer(customer)
 
 
-@app.get("/customers/{customer_id}", response_model=CustomerResponse)
+@app.get("/customers")
 @limiter.limit("100/minute")
-async def get_customer(request, customer_id: UUID, db: Session = Depends(get_db)):
+async def list_customers(
+    request: Request,
+    q: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+):
+    """List customers with optional keyword filter."""
+    query = db.query(Customer)
+    if q:
+        pattern = f"%{q.strip()}%"
+        query = query.filter((Customer.name.ilike(pattern)) | (Customer.email.ilike(pattern)))
+
+    customers = query.order_by(desc(Customer.updated_at)).offset(offset).limit(min(limit, 500)).all()
+    return [_serialize_customer(customer) for customer in customers]
+
+
+@app.get("/customers/{customer_id}")
+@limiter.limit("100/minute")
+async def get_customer(request: Request, customer_id: UUID, db: Session = Depends(get_db)):
     """Get customer by ID"""
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
-    return customer
+    return _serialize_customer(customer)
 
 
 # ============================================================================
@@ -679,7 +888,7 @@ async def get_customer(request, customer_id: UUID, db: Session = Depends(get_db)
 
 @app.get("/tasks/{task_id}")
 @limiter.limit("10/minute")
-async def get_task_status(request, task_id: str):
+async def get_task_status(request: Request, task_id: str):
     """
     Poll async task status.
 

@@ -78,7 +78,7 @@ function MainLayout({ children }: { children: React.ReactNode }) {
 function AppContent() {
   useEffect(() => {
     // Restore session from localStorage on app mount
-    useAuthStore().restoreSession();
+    useAuthStore.getState().restoreSession();
   }, []);
 
   useEffect(() => {
