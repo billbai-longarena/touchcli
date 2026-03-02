@@ -24,11 +24,12 @@
 | Documentation | ✅ **COMPLETE** | ↗️ improving | 2026-03-02 (CLAUDE/AGENTS/DECISIONS) |
 | Foundation Genesis | ✅ **VERIFIED** | ✅ ready for Worker | 2026-03-02 (涌现规则确认) |
 | Build     | pass (script syntax and metabolism cycle) | stable | 2026-03-02 |
-| Tests     | not configured (no test harness detected) | stable | 2026-03-02 |
+| Tests     | ✅ **E2E 54+ tests** (Playwright Chromium) + 80+ unit tests (Vitest) + 56 API tests (pytest) | ↗️ growing | 2026-03-02 |
 | Phase 1   | ✅ **IMPLEMENTATION COMPLETE** (schema, API, WebSocket, Redis design) | ✓ complete | 2026-03-02 Worker |
 | Backend   | 🟡 FRAMEWORK READY (FastAPI/Go scaffold + dependencies) | ✓ framework | Ready for Phase 2 |
 | Phase 2   | ✅ **IMPLEMENTATION COMPLETE** (3,569 lines, 7/7 tasks, Docker ready) | ✓ complete | 2026-03-02 Worker |
 | Phase 2+  | ✅ **CRITICAL PATH PREP** (JWT, seeds, tests - ready for Phase 3) | ✓ ready | 2026-03-02 Worker |
+| Phase 3   | 🟢 **IN PROGRESS** (Auth ✅, E2E 54+ tests ✅, Schema fixes ✅) | ↗️ active | 2026-03-02 Worker |
 
 ## Signals (5 Active) — After Metabolism Decay Cycle
 
@@ -53,7 +54,7 @@
 
 ## Notes for AI
 
-- **Project Timeline**: Genesis ✅ → Phase 1 ✅ → Phase 2 ✅ → Phase 3 🟢 In Progress (Task 3.1 complete, 3.2-3.7 pending) → Phase 4+ (Planning)
+- **Project Timeline**: Genesis ✅ → Phase 1 ✅ → Phase 2 ✅ → Phase 3 🟢 In Progress (Task 3.1 ✅, 3.6 E2E ✅, 3.2-3.5/3.7 pending) → Phase 4+ (Planning)
 - **DECISIONS.md**: Strategic planning complete (5 Phase breakdown, 12-16 week timeline, 8 core decisions + 2 EXPLORE items)
 - **Signal Hierarchy** (current after decay 0.98):
   - S-003 (w:35, HOLE) — Phase 2 complete ✅ (3,569 lines, all tasks)
@@ -108,6 +109,18 @@
   - ✅ Build Verification: TypeScript strict mode passes, Vite production build 238 KB gzipped
   - Documentation: PHASE_3_FRONTEND.md (269 lines) with architecture, API mapping, next steps
   - **Status: Task 3.1 ready, next Task 3.2 (WebSocket Real-time Integration)**
+
+- **Phase 3.6+ E2E User Journey Tests & Bug Fixes** (2026-03-02 Worker)
+  - ✅ 14 E2E user journey tests (10 describe blocks) in `user-journeys.spec.ts` — ALL PASSING
+  - ✅ Covers 3 personas: Alice (B2B), Bob (B2B), Carol (B2C/SMS login)
+  - ✅ UC-01~UC-10: Pipeline review, client acquisition, consultation record, deal closure, pipeline analysis, follow-up messaging, cross-entity navigation, session continuity, system exploration, error handling
+  - **Bug Fixes Discovered & Applied**:
+    1. ✅ Backend `OpportunityResponse` schema mismatched model columns (name→title, status→stage, amount→value)
+    2. ✅ Backend `list_opportunities` returned wrapper object instead of flat array
+    3. ✅ Backend `ConversationCreate` missing `title` field (model has it, schema didn't)
+    4. ✅ Frontend `CreateConversationModal` useState prop sync bug (preselectedCustomerId ignored after mount)
+    5. ✅ Backend rate limiter env var (`RATE_LIMIT_ENABLED=false` for testing)
+  - **Known Limitation**: `CreateCustomerModal` creates customers locally (demo IDs), not via API — conversation creation with demo customers will fail UUID validation
 
 - **S-005 Performance Benchmarks: IN PROGRESS** (2026-03-02 Worker)
   - ✅ Database Benchmarks: benchmarks.py (363 lines) with 7 test suites (insert, query, bulk, relationships, joins, FTS, pagination)

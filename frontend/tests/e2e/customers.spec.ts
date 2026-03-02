@@ -4,7 +4,9 @@ test.describe('Customer Management', () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await page.goto('/login');
-    await page.fill('input[placeholder*="UUID"]', 'demo-user-id');
+    await page.click('button:has-text("Password Login")');
+    await page.fill('input[id="account"]', 'alice');
+    await page.fill('input[id="password"]', 'touchcli123');
     await page.click('button:has-text("Login")');
     await page.waitForURL('/dashboard');
 
