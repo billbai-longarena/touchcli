@@ -16,3 +16,16 @@ audit-package-*
 .DS_Store
 __pycache__/
 *.pyc
+
+# Runtime logs
+.run_*.log
+
+# Python virtual environments
+.venv/
+venv/
+backend/python/.venv/
+
+# Frontend test artifacts
+frontend/playwright-report/
+frontend/test-results/
+frontend/artifacts/
