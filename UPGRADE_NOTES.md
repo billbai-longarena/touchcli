@@ -6,6 +6,23 @@
 
 ---
 
+## v10.0 (2026-03-02)
+
+### Changes
+- **TERMITE_PROTOCOL.md**: 协议规范版本升级为 `v10.0`，并在文档头部明确 `termite-protocol:v10.0`。
+- **Appendix F (最小内核)**: `termite-kernel` 版本标记升级为 `v10.0`，与入口文件保持一致。
+- **Kernel Consistency**: 统一 `CLAUDE.md` / `AGENTS.md` / `TERMITE_PROTOCOL.md` 的内核版本，消除 `v3.4` 与 `v10.0` 混用。
+
+### Action Required
+- 运行版本一致性检查：
+  - `grep "termite-kernel:v" CLAUDE.md AGENTS.md TERMITE_PROTOCOL.md`
+
+### Action Optional
+- 运行一次到达仪式刷新 `.birth`：
+  - `./scripts/field-arrive.sh`
+
+---
+
 ## v3.4 (2026-03-01)
 
 ### Changes

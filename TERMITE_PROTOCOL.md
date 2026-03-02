@@ -1,11 +1,12 @@
-<!-- termite-protocol:v3.4 -->
-# 白蚁协议 v3.4 (Termite Protocol)
+<!-- termite-protocol:v10.0 -->
+# 白蚁协议 v10.0 (Termite Protocol)
 
 白蚁协议的目的，是让多个不同水平的 Agent 同时工作，工作的目的是让三丘模型中提到的开发、产品和客户能共同成功、共同成长。成为各自最好的自己，也能共同达成非凡的成就。
 
 > **本文件是协议规范 (protocol spec)——通用的 AI Agent 协作协议。**
 > v3.0 架构变更：协议从"Agent 直接阅读的文档"转变为"人类参考 + 脚本配置源"。
 > `field-arrive.sh` 从环境中计算出 `.birth` 文件（≤800 tokens），Agent 只需读取 `.birth` 即可开始工作。
+> v10.0 升级：统一入口心跳内核版本（AGENTS/CLAUDE/TERMITE_PROTOCOL），并强化非交互 Claim→Work→Deposit 闭环。
 > 本协议规范为人类提供完整参考，为场脚本提供可解析的配置数据。
 
 ### 术语表 (Glossary)
@@ -1153,7 +1154,7 @@ git worktree remove ../<project>-<feature>
 > 入口文件的心跳内核也从此处派生。
 
 ```
-# termite-kernel:v3.4
+# termite-kernel:v10.0
 # 白蚁协议 — 最小内核（9 语法规则 + 4 安全网）
 
 [语法]
