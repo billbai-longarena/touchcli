@@ -10,7 +10,10 @@ export function OpportunitiesPage() {
   const { opportunities, customers, fetchOpportunities, loading, error } =
     useConversationStore();
   const [filterStatus, setFilterStatus] = useState<string>('');
-  const [filterCustomerId, setFilterCustomerId] = useState<string>(searchParams.get('customer') || '');
+  // Initialized from URL param; user can override via select without a sync effect
+  const [filterCustomerId, setFilterCustomerId] = useState<string>(
+    () => searchParams.get('customer') ?? ''
+  );
   const [sortBy, setSortBy] = useState<'amount' | 'date'>('amount');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
@@ -19,13 +22,6 @@ export function OpportunitiesPage() {
   useEffect(() => {
     fetchOpportunities();
   }, [fetchOpportunities]);
-
-  // filterCustomerId is initialized directly from searchParams above;
-  // update it if the URL param changes after mount
-  useEffect(() => {
-    const customerParam = searchParams.get('customer') ?? '';
-    setFilterCustomerId(customerParam);
-  }, [searchParams]);
 
   const filteredOpportunities = opportunities
     .filter((opp) => !filterStatus || opp.stage === filterStatus)

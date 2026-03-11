@@ -106,7 +106,7 @@ describe('authStore', () => {
 
       try {
         await loginPromise;
-      } catch (_e) {
+      } catch {
         // Expected to throw
       }
 
