@@ -3,10 +3,23 @@ SQLAlchemy ORM Models for TouchCLI Agent Service
 Maps to Phase 1 schema (db/001_initial_schema.sql)
 """
 
-from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean, Numeric, ForeignKey, Index, UniqueConstraint, event
+from sqlalchemy import (
+    Column,
+    String,
+    Integer,
+    DateTime,
+    Text,
+    Boolean,
+    Numeric,
+    ForeignKey,
+    Index,
+    UniqueConstraint,
+    event,
+)
+from sqlalchemy import JSON
+from sqlalchemy.types import Uuid
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID, JSON
 from datetime import datetime
 import uuid
 
@@ -15,9 +28,10 @@ Base = declarative_base()
 
 class User(Base):
     """User model - Sales agents and team members"""
+
     __tablename__ = "users"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Uuid(), primary_key=True, default=uuid.uuid4)
     email = Column(String(255), unique=True, nullable=False, index=True)
     name = Column(String(255), nullable=False)
     avatar_url = Column(Text)
@@ -26,7 +40,7 @@ class User(Base):
     phone_number = Column(String(20))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    updated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    updated_by = Column(Uuid(), ForeignKey("users.id"))
     version = Column(Integer, default=1)
 
     # Relationships
@@ -42,9 +56,10 @@ class User(Base):
 
 class Customer(Base):
     """Customer model"""
+
     __tablename__ = "customers"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Uuid(), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False, index=True)
     email = Column(String(255), unique=True, index=True)
     phone = Column(String(20))
@@ -67,10 +82,11 @@ class Customer(Base):
 
 class Opportunity(Base):
     """Sales opportunity model"""
+
     __tablename__ = "opportunities"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=False)
+    id = Column(Uuid(), primary_key=True, default=uuid.uuid4)
+    customer_id = Column(Uuid(), ForeignKey("customers.id"), nullable=False)
     title = Column(String(255), nullable=False)
     stage = Column(String(50), default="prospecting", index=True)
     value = Column(Numeric(12, 2))
@@ -93,12 +109,13 @@ class Opportunity(Base):
 
 class Conversation(Base):
     """Conversation model"""
+
     __tablename__ = "conversations"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"))
-    opportunity_id = Column(UUID(as_uuid=True), ForeignKey("opportunities.id"))
+    id = Column(Uuid(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(Uuid(), ForeignKey("users.id"), nullable=False)
+    customer_id = Column(Uuid(), ForeignKey("customers.id"))
+    opportunity_id = Column(Uuid(), ForeignKey("opportunities.id"))
     title = Column(String(255))
     mode = Column(String(50), default="text", index=True)
     type = Column(String(50), default="sales", index=True)
@@ -114,8 +131,12 @@ class Conversation(Base):
     user = relationship("User", back_populates="conversations")
     customer = relationship("Customer", back_populates="conversations")
     opportunity = relationship("Opportunity", back_populates="conversations")
-    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
-    agent_states = relationship("AgentState", back_populates="conversation", cascade="all, delete-orphan")
+    messages = relationship(
+        "Message", back_populates="conversation", cascade="all, delete-orphan"
+    )
+    agent_states = relationship(
+        "AgentState", back_populates="conversation", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         Index("idx_conversations_user_id", "user_id"),
@@ -127,10 +148,11 @@ class Conversation(Base):
 
 class Message(Base):
     """Message model"""
+
     __tablename__ = "messages"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=False)
+    id = Column(Uuid(), primary_key=True, default=uuid.uuid4)
+    conversation_id = Column(Uuid(), ForeignKey("conversations.id"), nullable=False)
     sender = Column(String(50), nullable=False)  # user, agent, system
     content = Column(Text, nullable=False)
     role = Column(String(50))  # user, assistant, system (for LLM compatibility)
@@ -151,10 +173,11 @@ class Message(Base):
 
 class AgentState(Base):
     """Agent state checkpoint for LangGraph"""
+
     __tablename__ = "agent_states"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=False)
+    id = Column(Uuid(), primary_key=True, default=uuid.uuid4)
+    conversation_id = Column(Uuid(), ForeignKey("conversations.id"), nullable=False)
     agent_name = Column(String(100), nullable=False)
     checkpoint_id = Column(String(255))
     state_data = Column(JSON, nullable=False)  # Serialized LangGraph state
@@ -174,13 +197,14 @@ class AgentState(Base):
 
 class ActivityLog(Base):
     """Activity audit log"""
+
     __tablename__ = "activity_log"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    id = Column(Uuid(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(Uuid(), ForeignKey("users.id"), nullable=False)
     action = Column(String(100), nullable=False)
     resource_type = Column(String(100))
-    resource_id = Column(UUID(as_uuid=True))
+    resource_id = Column(Uuid())
     details = Column(JSON)
     created_at = Column(DateTime, default=datetime.utcnow)
     version = Column(Integer, default=1)
@@ -197,10 +221,11 @@ class ActivityLog(Base):
 
 class SessionSnapshot(Base):
     """User session snapshots"""
+
     __tablename__ = "session_snapshots"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    id = Column(Uuid(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(Uuid(), ForeignKey("users.id"), nullable=False)
     session_data = Column(JSON, nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -215,12 +240,15 @@ class SessionSnapshot(Base):
 
 class BatchJob(Base):
     """Async batch job tracking (for Celery)"""
+
     __tablename__ = "batch_jobs"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Uuid(), primary_key=True, default=uuid.uuid4)
     task_id = Column(String(255), unique=True, nullable=False)
     job_type = Column(String(100), nullable=False)
-    status = Column(String(50), default="pending", index=True)  # pending, processing, completed, failed
+    status = Column(
+        String(50), default="pending", index=True
+    )  # pending, processing, completed, failed
     progress = Column(Numeric(5, 2), default=0)  # 0-100
     input_params = Column(JSON)
     result = Column(JSON)
