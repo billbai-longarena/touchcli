@@ -4,6 +4,7 @@ Phase 2: Backend Infrastructure Implementation
 """
 
 from fastapi import FastAPI, Depends, HTTPException, status, Header, Request
+from sqlalchemy.exc import IntegrityError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.encoders import jsonable_encoder
@@ -30,13 +31,29 @@ try:
     # When running as module
     from .db import get_db, engine, init_db
     from .models import (
-        Base, User, Customer, Opportunity, Conversation, Message, AgentState, ActivityLog
+        Base,
+        User,
+        Customer,
+        Opportunity,
+        Conversation,
+        Message,
+        AgentState,
+        ActivityLog,
     )
     from .schemas import (
-        ConversationCreate, ConversationResponse, MessageCreate, MessageResponse,
-        CustomerCreate, CustomerResponse, OpportunityCreate, OpportunityResponse,
-        HealthCheckResponse, ComponentHealth, PasswordLoginRequest,
-        SendSmsCodeRequest, SmsLoginRequest
+        ConversationCreate,
+        ConversationResponse,
+        MessageCreate,
+        MessageResponse,
+        CustomerCreate,
+        CustomerResponse,
+        OpportunityCreate,
+        OpportunityResponse,
+        HealthCheckResponse,
+        ComponentHealth,
+        PasswordLoginRequest,
+        SendSmsCodeRequest,
+        SmsLoginRequest,
     )
     from .workflow import ConversationWorkflow
     from .auth import get_current_user, create_token
@@ -44,13 +61,29 @@ except ImportError:
     # Fallback for direct execution
     from db import get_db, engine, init_db
     from models import (
-        Base, User, Customer, Opportunity, Conversation, Message, AgentState, ActivityLog
+        Base,
+        User,
+        Customer,
+        Opportunity,
+        Conversation,
+        Message,
+        AgentState,
+        ActivityLog,
     )
     from schemas import (
-        ConversationCreate, ConversationResponse, MessageCreate, MessageResponse,
-        CustomerCreate, CustomerResponse, OpportunityCreate, OpportunityResponse,
-        HealthCheckResponse, ComponentHealth, PasswordLoginRequest,
-        SendSmsCodeRequest, SmsLoginRequest
+        ConversationCreate,
+        ConversationResponse,
+        MessageCreate,
+        MessageResponse,
+        CustomerCreate,
+        CustomerResponse,
+        OpportunityCreate,
+        OpportunityResponse,
+        HealthCheckResponse,
+        ComponentHealth,
+        PasswordLoginRequest,
+        SendSmsCodeRequest,
+        SmsLoginRequest,
     )
     from workflow import ConversationWorkflow
     from auth import get_current_user, create_token
@@ -120,7 +153,7 @@ def _resolve_locale(
 app = FastAPI(
     title="TouchCLI Agent Service",
     version="1.0.0",
-    description="Conversational Sales Assistant Backend"
+    description="Conversational Sales Assistant Backend",
 )
 
 # ============================================================================
@@ -137,7 +170,7 @@ if sentry_dsn:
         traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
         environment=os.getenv("ENVIRONMENT", "development"),
         release=os.getenv("APP_VERSION", "1.0.0"),
-        debug=os.getenv("DEBUG", "false").lower() == "true"
+        debug=os.getenv("DEBUG", "false").lower() == "true",
     )
     logger.info("Sentry error tracking initialized")
 
@@ -146,37 +179,33 @@ if sentry_dsn:
 # ============================================================================
 # Request metrics
 http_requests_total = Counter(
-    'http_requests_total',
-    'Total HTTP requests',
-    ['method', 'endpoint', 'status']
+    "http_requests_total", "Total HTTP requests", ["method", "endpoint", "status"]
 )
 
 http_request_duration_seconds = Histogram(
-    'http_request_duration_seconds',
-    'HTTP request latency',
-    ['method', 'endpoint'],
-    buckets=(0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0)
+    "http_request_duration_seconds",
+    "HTTP request latency",
+    ["method", "endpoint"],
+    buckets=(0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0),
 )
 
 # Database metrics
 db_query_duration_seconds = Histogram(
-    'db_query_duration_seconds',
-    'Database query latency',
-    ['operation'],
-    buckets=(0.001, 0.01, 0.05, 0.1, 0.5, 1.0)
+    "db_query_duration_seconds",
+    "Database query latency",
+    ["operation"],
+    buckets=(0.001, 0.01, 0.05, 0.1, 0.5, 1.0),
 )
 
 # Agent metrics
 agent_responses_total = Counter(
-    'agent_responses_total',
-    'Total agent responses',
-    ['status', 'confidence_level']
+    "agent_responses_total", "Total agent responses", ["status", "confidence_level"]
 )
 
 agent_response_time_seconds = Histogram(
-    'agent_response_time_seconds',
-    'Agent response processing time',
-    buckets=(0.1, 0.5, 1.0, 2.0, 5.0, 10.0)
+    "agent_response_time_seconds",
+    "Agent response processing time",
+    buckets=(0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
 )
 
 logger.info("Prometheus metrics initialized")
@@ -185,10 +214,12 @@ logger.info("Prometheus metrics initialized")
 _rate_limit_enabled = os.getenv("RATE_LIMIT_ENABLED", "true").lower() != "false"
 limiter = Limiter(key_func=get_remote_address, enabled=_rate_limit_enabled)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(
-    status_code=429,
-    content={"detail": "Rate limit exceeded"}
-))
+app.add_exception_handler(
+    RateLimitExceeded,
+    lambda request, exc: JSONResponse(
+        status_code=429, content={"detail": "Rate limit exceeded"}
+    ),
+)
 app.add_middleware(SlowAPIMiddleware)
 
 # CORS Middleware
@@ -204,7 +235,9 @@ app.add_middleware(
 # Configuration
 # ============================================================================
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/touchcli")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql://user:password@localhost:5432/touchcli"
+)
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
@@ -351,7 +384,9 @@ async def sms_login(
     phone_key = _normalize_phone(payload.phone)
     record = SMS_CODE_STORE.get(phone_key)
     if not record:
-        raise HTTPException(status_code=400, detail="Verification code not sent or expired")
+        raise HTTPException(
+            status_code=400, detail="Verification code not sent or expired"
+        )
 
     expires_at = record.get("expires_at")
     code = str(record.get("code", ""))
@@ -383,6 +418,7 @@ async def sms_login(
         "user": _user_summary(user),
     }
 
+
 @app.post("/login")
 @limiter.limit("5/minute")
 async def login(request: Request, user_id: UUID, db: Session = Depends(get_db)):
@@ -407,15 +443,13 @@ async def login(request: Request, user_id: UUID, db: Session = Depends(get_db)):
     token = create_token(user.id)
     logger.info(f"Generated token for user {user.id}")
 
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user_id": str(user.id)
-    }
+    return {"access_token": token, "token_type": "bearer", "user_id": str(user.id)}
+
 
 # ============================================================================
 # Metrics Endpoint (for Prometheus scraping)
 # ============================================================================
+
 
 @app.get("/metrics")
 async def metrics():
@@ -425,14 +459,13 @@ async def metrics():
     Returns:
         Prometheus-formatted metrics (text/plain)
     """
-    return Response(
-        content=generate_latest(),
-        media_type="text/plain; version=0.0.4"
-    )
+    return Response(content=generate_latest(), media_type="text/plain; version=0.0.4")
+
 
 # ============================================================================
 # Health Check
 # ============================================================================
+
 
 @app.get("/health", response_model=HealthCheckResponse)
 async def health_check(db: Session = Depends(get_db)):
@@ -489,30 +522,29 @@ async def health_check(db: Session = Depends(get_db)):
         version="1.0.0",
         checks={
             "database": ComponentHealth(
-                status=db_status,
-                latency_ms=db_latency,
-                last_checked=datetime.utcnow()
+                status=db_status, latency_ms=db_latency, last_checked=datetime.utcnow()
             ),
             "agent_service": ComponentHealth(
-                status="ok",
-                latency_ms=0,
-                last_checked=datetime.utcnow()
+                status="ok", latency_ms=0, last_checked=datetime.utcnow()
             ),
             "cache": ComponentHealth(
                 status="ok" if redis_ok else "error",
                 latency_ms=redis_latency if redis_ok else None,
-                last_checked=datetime.utcnow()
-            )
-        }
+                last_checked=datetime.utcnow(),
+            ),
+        },
     )
+
 
 # ============================================================================
 # Conversation Endpoints
 # ============================================================================
 
+
 @app.post("/conversations", response_model=ConversationResponse, status_code=201)
 @limiter.limit("30/minute")
-async def create_conversation(request: Request,
+async def create_conversation(
+    request: Request,
     req: ConversationCreate,
     db: Session = Depends(get_db),
     user_id: UUID = Depends(get_current_user),
@@ -540,7 +572,9 @@ async def create_conversation(request: Request,
     )
 
     # Persist latest locale preference from explicit request/header.
-    if (req.locale or accept_language) and current_user.preferred_locale != resolved_locale:
+    if (
+        req.locale or accept_language
+    ) and current_user.preferred_locale != resolved_locale:
         current_user.preferred_locale = resolved_locale
         db.add(current_user)
 
@@ -551,7 +585,9 @@ async def create_conversation(request: Request,
             raise HTTPException(status_code=404, detail="Customer not found")
 
     if req.opportunity_id:
-        opportunity = db.query(Opportunity).filter(Opportunity.id == req.opportunity_id).first()
+        opportunity = (
+            db.query(Opportunity).filter(Opportunity.id == req.opportunity_id).first()
+        )
         if not opportunity:
             raise HTTPException(status_code=404, detail="Opportunity not found")
 
@@ -593,9 +629,7 @@ async def list_conversations(
 @app.get("/conversations/{conversation_id}", response_model=ConversationResponse)
 @limiter.limit("60/minute")
 async def get_conversation(
-    request: Request,
-    conversation_id: UUID,
-    db: Session = Depends(get_db)
+    request: Request, conversation_id: UUID, db: Session = Depends(get_db)
 ):
     """
     Fetch conversation metadata.
@@ -606,15 +640,19 @@ async def get_conversation(
     Returns:
         Conversation object with metadata
     """
-    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    conversation = (
+        db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    )
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
     return conversation
 
+
 # ============================================================================
 # Message Endpoints
 # ============================================================================
+
 
 @app.post("/messages", status_code=202)
 @limiter.limit("100/minute")
@@ -622,7 +660,7 @@ async def send_message(
     request: Request,
     req: MessageCreate,
     db: Session = Depends(get_db),
-    sender_id: UUID = Depends(get_current_user)
+    sender_id: UUID = Depends(get_current_user),
 ):
     """
     Send message and trigger Agent processing.
@@ -638,7 +676,9 @@ async def send_message(
         - agent_response: Initial agent response
     """
     # Validate conversation exists
-    conversation = db.query(Conversation).filter(Conversation.id == req.conversation_id).first()
+    conversation = (
+        db.query(Conversation).filter(Conversation.id == req.conversation_id).first()
+    )
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
@@ -649,7 +689,7 @@ async def send_message(
         sender_role="user",
         content=req.content,
         content_type=req.content_type,
-        attachments=req.attachments or []
+        attachments=req.attachments or [],
     )
     db.add(message)
     db.commit()
@@ -674,7 +714,7 @@ async def send_message(
             sender_role="agent",
             content=result.get("agent_response", ""),
             content_type="text",
-            attachments=[]
+            attachments=[],
         )
         db.add(agent_message)
         db.commit()
@@ -706,7 +746,7 @@ async def get_messages(
     conversation_id: UUID,
     limit: int = 50,
     offset: int = 0,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Fetch conversation message history.
@@ -722,7 +762,9 @@ async def get_messages(
         - limit, offset: Pagination info
     """
     # Validate conversation exists
-    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    conversation = (
+        db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    )
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
@@ -731,27 +773,34 @@ async def get_messages(
 
     # Fetch messages with pagination
     limit = min(limit, 500)  # Cap at 500
-    messages = db.query(Message).filter(
-        Message.conversation_id == conversation_id
-    ).order_by(desc(Message.created_at)).offset(offset).limit(limit).all()
+    messages = (
+        db.query(Message)
+        .filter(Message.conversation_id == conversation_id)
+        .order_by(desc(Message.created_at))
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
 
     return {
-        "messages": [MessageResponse.model_validate(m, from_attributes=True) for m in messages],
+        "messages": [
+            MessageResponse.model_validate(m, from_attributes=True) for m in messages
+        ],
         "total": total,
         "offset": offset,
-        "limit": limit
+        "limit": limit,
     }
+
 
 # ============================================================================
 # Opportunity Endpoints
 # ============================================================================
 
+
 @app.post("/opportunities", response_model=OpportunityResponse, status_code=201)
 @limiter.limit("30/minute")
 async def create_opportunity(
-    request: Request,
-    req: OpportunityCreate,
-    db: Session = Depends(get_db)
+    request: Request, req: OpportunityCreate, db: Session = Depends(get_db)
 ):
     """
     Create or update opportunity.
@@ -776,7 +825,8 @@ async def create_opportunity(
         customer_id=req.customer_id,
         title=req.title,
         value=req.amount,
-        stage=req.stage,
+        stage=req.get_stage(),
+        probability=req.probability,
         notes=req.notes,
         close_date=req.close_date,
     )
@@ -796,7 +846,7 @@ async def list_opportunities(
     customer_id: Optional[UUID] = None,
     limit: int = 50,
     offset: int = 0,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Query opportunities with filters.
@@ -824,30 +874,46 @@ async def list_opportunities(
     limit = min(limit, 500)  # Cap at 500
     opportunities = query.offset(offset).limit(limit).all()
 
-    return [OpportunityResponse.model_validate(o, from_attributes=True) for o in opportunities]
+    return {
+        "opportunities": [
+            OpportunityResponse.model_validate(o, from_attributes=True)
+            for o in opportunities
+        ],
+        "total": total,
+    }
+
 
 # ============================================================================
 # Customer Endpoints
 # ============================================================================
 
+
 @app.post("/customers", status_code=201)
 @limiter.limit("30/minute")
 async def create_customer(
-    request: Request,
-    req: CustomerCreate,
-    db: Session = Depends(get_db)
+    request: Request, req: CustomerCreate, db: Session = Depends(get_db)
 ):
     """Create a customer"""
     customer = Customer(
         name=req.name,
         email=req.email,
         phone=req.phone,
-        company=(req.metadata or {}).get("company") if isinstance(req.metadata, dict) else None,
-        industry=(req.metadata or {}).get("industry") if isinstance(req.metadata, dict) else None,
+        company=(req.metadata or {}).get("company")
+        if isinstance(req.metadata, dict)
+        else None,
+        industry=(req.metadata or {}).get("industry")
+        if isinstance(req.metadata, dict)
+        else None,
         metadata_json=req.metadata or {},
     )
     db.add(customer)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409, detail="Customer with this email already exists"
+        )
     db.refresh(customer)
     logger.info(f"Created customer {customer.id}")
     return _serialize_customer(customer)
@@ -866,15 +932,24 @@ async def list_customers(
     query = db.query(Customer)
     if q:
         pattern = f"%{q.strip()}%"
-        query = query.filter((Customer.name.ilike(pattern)) | (Customer.email.ilike(pattern)))
+        query = query.filter(
+            (Customer.name.ilike(pattern)) | (Customer.email.ilike(pattern))
+        )
 
-    customers = query.order_by(desc(Customer.updated_at)).offset(offset).limit(min(limit, 500)).all()
+    customers = (
+        query.order_by(desc(Customer.updated_at))
+        .offset(offset)
+        .limit(min(limit, 500))
+        .all()
+    )
     return [_serialize_customer(customer) for customer in customers]
 
 
 @app.get("/customers/{customer_id}")
 @limiter.limit("100/minute")
-async def get_customer(request: Request, customer_id: UUID, db: Session = Depends(get_db)):
+async def get_customer(
+    request: Request, customer_id: UUID, db: Session = Depends(get_db)
+):
     """Get customer by ID"""
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:
@@ -885,6 +960,7 @@ async def get_customer(request: Request, customer_id: UUID, db: Session = Depend
 # ============================================================================
 # Task Status Endpoint (for Celery async tasks)
 # ============================================================================
+
 
 @app.get("/tasks/{task_id}")
 @limiter.limit("10/minute")
@@ -901,16 +977,13 @@ async def get_task_status(request: Request, task_id: str):
         - error: Error message if failed
     """
     # TODO: Implement task polling (Celery/BullMQ)
-    return {
-        "task_id": task_id,
-        "status": "processing",
-        "result": None,
-        "error": None
-    }
+    return {"task_id": task_id, "status": "processing", "result": None, "error": None}
+
 
 # ============================================================================
 # Error Handlers
 # ============================================================================
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
@@ -920,9 +993,10 @@ async def http_exception_handler(request, exc):
         content={
             "error": exc.detail,
             "code": "HTTP_ERROR",
-            "path": str(request.url.path)
-        }
+            "path": str(request.url.path),
+        },
     )
+
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
@@ -932,13 +1006,15 @@ async def general_exception_handler(request, exc):
         content={
             "error": "Internal server error",
             "code": "INTERNAL_ERROR",
-            "path": str(request.url.path)
-        }
+            "path": str(request.url.path),
+        },
     )
+
 
 # ============================================================================
 # Startup / Shutdown
 # ============================================================================
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -972,10 +1048,8 @@ async def shutdown_event():
     engine.dispose()
     logger.info("TouchCLI Agent Service shutdown complete")
 
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=int(os.getenv("AGENT_SERVICE_PORT", 8000))
-    )
+
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("AGENT_SERVICE_PORT", 8000)))

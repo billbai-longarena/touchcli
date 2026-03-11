@@ -90,6 +90,7 @@ class Opportunity(Base):
     title = Column(String(255), nullable=False)
     stage = Column(String(50), default="prospecting", index=True)
     value = Column(Numeric(12, 2))
+    probability = Column(Numeric(5, 4))  # 0.0 - 1.0
     close_date = Column(DateTime)
     notes = Column(Text)
     metadata_json = Column("metadata", JSON)
@@ -153,8 +154,12 @@ class Message(Base):
 
     id = Column(Uuid(), primary_key=True, default=uuid.uuid4)
     conversation_id = Column(Uuid(), ForeignKey("conversations.id"), nullable=False)
-    sender = Column(String(50), nullable=False)  # user, agent, system
+    sender = Column(String(50))  # user, agent, system (legacy)
+    sender_id = Column(Uuid(), ForeignKey("users.id"))
+    sender_role = Column(String(50))  # user, agent, system
     content = Column(Text, nullable=False)
+    content_type = Column(String(50), default="text")
+    attachments = Column(JSON, default=list)
     role = Column(String(50))  # user, assistant, system (for LLM compatibility)
     metadata_json = Column("metadata", JSON)
     created_at = Column(DateTime, default=datetime.utcnow)
