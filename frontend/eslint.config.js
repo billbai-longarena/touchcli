@@ -20,4 +20,11 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  // Relax rules for test helper files that intentionally mix components and utils
+  {
+    files: ['src/test-utils.tsx', 'src/setup.ts', '**/__tests__/**', 'tests/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

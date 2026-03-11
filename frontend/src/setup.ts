@@ -29,7 +29,7 @@ const localStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
-global.localStorage = localStorageMock as any;
+global.localStorage = localStorageMock as unknown as Storage;
 
 // Mock WebSocket
 vi.mock('../api/websocket', () => ({
@@ -44,7 +44,7 @@ vi.mock('../api/websocket', () => ({
 // Suppress console errors in tests (optional)
 const originalError = console.error;
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('Not implemented: HTMLFormElement.prototype.submit') ||

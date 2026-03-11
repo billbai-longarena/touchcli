@@ -20,12 +20,11 @@ export function OpportunitiesPage() {
     fetchOpportunities();
   }, [fetchOpportunities]);
 
-  // Update filter if customer query param changes
+  // filterCustomerId is initialized directly from searchParams above;
+  // update it if the URL param changes after mount
   useEffect(() => {
-    const customerParam = searchParams.get('customer');
-    if (customerParam) {
-      setFilterCustomerId(customerParam);
-    }
+    const customerParam = searchParams.get('customer') ?? '';
+    setFilterCustomerId(customerParam);
   }, [searchParams]);
 
   const filteredOpportunities = opportunities

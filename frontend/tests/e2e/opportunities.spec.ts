@@ -174,7 +174,7 @@ test.describe('Opportunity Management', () => {
   test('should delete opportunity with confirmation', async ({ page }) => {
     // Click first opportunity
     const firstOpp = await page.locator('.opp-card').first();
-    const oppTitle = await firstOpp.locator('h3').textContent();
+    await firstOpp.locator('h3').textContent(); // capture title for context
 
     await firstOpp.click();
 

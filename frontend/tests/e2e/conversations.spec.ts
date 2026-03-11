@@ -65,7 +65,7 @@ test.describe('Conversation Management', () => {
     expect(page.url()).toContain('/conversations');
 
     // New conversation might appear in list
-    const newConversation = await page.locator('text=/Q1 Planning|New Conversation/i');
+    await page.locator('text=/Q1 Planning|New Conversation/i');
     // Don't assert it exists as it might be in different view
   });
 
@@ -183,7 +183,7 @@ test.describe('Conversation Management', () => {
     const dotIndicator = await page.locator('.status-indicator, .connection-dot');
 
     const hasStatus = (await connectionStatus.count() > 0) || (await dotIndicator.count() > 0);
-    // Don't assert as connection status might not be visible in UI
+    void hasStatus; // connection status might not be visible in UI
   });
 
   test('should handle message character limit', async ({ page }) => {
@@ -201,8 +201,8 @@ test.describe('Conversation Management', () => {
         await messageInput.fill(longMessage);
 
         // Check if counter appears
-        const counter = await page.locator('text=/[0-9]+\/[0-9]+/');
-        // Don't assert as it might not be visible in this view
+        const counter = await page.locator('text=/[0-9]+[/][0-9]+/');
+        void counter; // counter might not be visible in this view
       }
     }
   });
