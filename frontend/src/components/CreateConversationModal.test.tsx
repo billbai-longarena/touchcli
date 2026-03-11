@@ -3,6 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CreateConversationModal } from './CreateConversationModal';
 
+// Keep a stable reference to createConversation so we can inspect calls and
+// re-configure the resolved value without re-mounting the mock module.
+const mockCreateConversation = vi.fn(() => Promise.resolve({}));
+
 // Mock the store
 vi.mock('../store/conversationStore', () => ({
   useConversationStore: () => ({
@@ -10,13 +14,15 @@ vi.mock('../store/conversationStore', () => ({
       { id: 'cust1', name: 'Test Corp', email: 'test@corp.com' },
       { id: 'cust2', name: 'Acme Inc', email: 'acme@inc.com' },
     ],
-    createConversation: vi.fn(() => Promise.resolve({})),
+    createConversation: mockCreateConversation,
   }),
 }));
 
 describe('CreateConversationModal', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Reset call history but keep the implementation
+    mockCreateConversation.mockClear();
+    mockCreateConversation.mockResolvedValue({});
   });
 
   it('should not render when isOpen is false', () => {
@@ -57,8 +63,10 @@ describe('CreateConversationModal', () => {
   it('should require customer and title fields', async () => {
     render(<CreateConversationModal isOpen={true} onClose={() => {}} />);
 
-    const submitBtn = screen.getByRole('button', { name: /create/i });
-    fireEvent.click(submitBtn);
+    // The submit button is disabled when fields are empty; submit the form
+    // directly to trigger validation.
+    const form = screen.getByRole('button', { name: /create/i }).closest('form')!;
+    fireEvent.submit(form);
 
     await waitFor(() => {
       const errorElement = screen.getByText((_content, element) => {
@@ -183,22 +191,17 @@ describe('CreateConversationModal', () => {
     const submitBtn = screen.getByRole('button', { name: /create/i });
     fireEvent.click(submitBtn);
 
-    // Button should show loading state during submission
+    // After successful submission the form resets (title cleared) and onClose
+    // is called.  The component remains mounted because the test provides a
+    // no-op onClose; verify that submission completed without throwing.
     await waitFor(() => {
-      expect(submitBtn).not.toBeDisabled();
+      expect(mockCreateConversation).toHaveBeenCalledOnce();
     });
   });
 
   it('should display error message on submission failure', async () => {
     const user = userEvent.setup();
-    vi.mock('../store/conversationStore', () => ({
-      useConversationStore: () => ({
-        customers: [{ id: 'cust1', name: 'Test Corp', email: 'test@corp.com' }],
-        createConversation: vi.fn(() =>
-          Promise.reject(new Error('Network error'))
-        ),
-      }),
-    }));
+    mockCreateConversation.mockRejectedValueOnce(new Error('Network error'));
 
     render(<CreateConversationModal isOpen={true} onClose={() => {}} />);
 

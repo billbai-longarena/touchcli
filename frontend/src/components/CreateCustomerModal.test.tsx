@@ -48,8 +48,10 @@ describe('CreateCustomerModal', () => {
   it('should show error when submitting empty form', async () => {
     render(<CreateCustomerModal isOpen={true} onClose={() => {}} />);
 
-    const submitBtn = screen.getByRole('button', { name: /create customer/i });
-    fireEvent.click(submitBtn);
+    // The submit button is disabled when required fields are empty; submit the
+    // form directly to bypass the disabled state and trigger validation.
+    const form = screen.getByRole('button', { name: /create customer/i }).closest('form')!;
+    fireEvent.submit(form);
 
     // Error element should be displayed
     const errorElement = screen.getByText((_content, element) => {

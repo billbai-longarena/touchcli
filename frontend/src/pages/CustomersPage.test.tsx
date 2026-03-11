@@ -104,7 +104,9 @@ describe('CustomersPage', () => {
     const customerItem = screen.getByText('Test Corp');
     await user.click(customerItem);
 
-    expect(screen.getByText('test@corp.com')).toBeInTheDocument();
+    // The email and phone appear in the detail panel; they may also appear in
+    // the sidebar list, so use getAllByText and verify at least one instance.
+    expect(screen.getAllByText('test@corp.com').length).toBeGreaterThan(0);
     expect(screen.getByText('+1-555-0100')).toBeInTheDocument();
   });
 

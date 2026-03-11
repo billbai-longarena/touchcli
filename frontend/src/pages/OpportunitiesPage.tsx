@@ -84,8 +84,8 @@ export function OpportunitiesPage() {
 
       <div className="opps-filters">
         <div className="filter-group">
-          <label>Status</label>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+          <label htmlFor="filter-status">Status</label>
+          <select id="filter-status" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
             <option value="">All Stages</option>
             <option value="discovery">Discovery</option>
             <option value="proposal">Proposal</option>
@@ -95,8 +95,8 @@ export function OpportunitiesPage() {
         </div>
 
         <div className="filter-group">
-          <label>Customer</label>
-          <select value={filterCustomerId} onChange={(e) => setFilterCustomerId(e.target.value)}>
+          <label htmlFor="filter-customer">Customer</label>
+          <select id="filter-customer" value={filterCustomerId} onChange={(e) => setFilterCustomerId(e.target.value)}>
             <option value="">All Customers</option>
             {customers.map((customer) => (
               <option key={customer.id} value={customer.id}>
@@ -107,8 +107,8 @@ export function OpportunitiesPage() {
         </div>
 
         <div className="filter-group">
-          <label>Sort By</label>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as 'amount' | 'date')}>
+          <label htmlFor="filter-sort">Sort By</label>
+          <select id="filter-sort" value={sortBy} onChange={(e) => setSortBy(e.target.value as 'amount' | 'date')}>
             <option value="amount">Amount (High to Low)</option>
             <option value="date">Date Updated</option>
           </select>

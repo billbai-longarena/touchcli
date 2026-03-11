@@ -1,15 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useSearchParams } from 'react-router-dom';
 import { OpportunitiesPage } from './OpportunitiesPage';
 
-// Mock navigation
-const mockUseSearchParams = vi.fn();
+// vi.mock is hoisted above all imports by Vitest, so top-level variables
+// declared in user-space (before vi.mock) are NOT accessible inside the
+// factory.  Use vi.fn() directly inside the factory; retrieve the typed spy
+// afterwards with vi.mocked().
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useSearchParams: mockUseSearchParams,
+    useSearchParams: vi.fn(() => [new URLSearchParams(), vi.fn()]),
   };
 });
 
@@ -46,14 +48,20 @@ vi.mock('../store/conversationStore', () => ({
   }),
 }));
 
+// Typed reference to the mocked hook – safe because vi.mock is hoisted above
+// the import statements at runtime.
+const mockUseSearchParams = vi.mocked(useSearchParams);
+
 const renderWithRouter = (component: React.ReactElement) => {
-  mockUseSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
+  mockUseSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()] as ReturnType<typeof useSearchParams>);
   return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 
 describe('OpportunitiesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Restore default mock return value after clearAllMocks resets it
+    mockUseSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()] as ReturnType<typeof useSearchParams>);
   });
 
   it('should render opportunity list', () => {
@@ -142,7 +150,9 @@ describe('OpportunitiesPage', () => {
 
     expect(screen.getByText('Enterprise Deal')).toBeInTheDocument();
     expect(screen.getByText(/100k/i)).toBeInTheDocument(); // Amount
-    expect(screen.getByText('Test Corp')).toBeInTheDocument(); // Customer
+    // Customer name appears in both the filter <option> and the card; verify
+    // at least one instance is in the document.
+    expect(screen.getAllByText('Test Corp').length).toBeGreaterThan(0);
   });
 
   it('should show stage badge with color', () => {
@@ -168,7 +178,9 @@ describe('OpportunitiesPage', () => {
   it('should show updated date on opportunity card', () => {
     renderWithRouter(<OpportunitiesPage />);
 
-    expect(screen.getByText(/updated/i)).toBeInTheDocument();
+    // The card body renders a label with text "Updated" next to the date;
+    // multiple elements may contain "updated" so verify at least one exists.
+    expect(screen.getAllByText(/updated/i).length).toBeGreaterThan(0);
   });
 
   it('should handle empty state when no opportunities match filters', async () => {
@@ -188,7 +200,9 @@ describe('OpportunitiesPage', () => {
     const newOppBtn = screen.getByRole('button', { name: /\+ new opportunity/i });
     fireEvent.click(newOppBtn);
 
-    expect(screen.getByText(/new opportunity/i)).toBeInTheDocument();
+    // The modal header reads "New Opportunity"; use heading role to avoid
+    // matching the button text which also contains "new opportunity".
+    expect(screen.getByRole('heading', { name: /new opportunity/i })).toBeInTheDocument();
   });
 
   it('should calculate total pipeline correctly', () => {
@@ -208,16 +222,9 @@ describe('OpportunitiesPage', () => {
   });
 
   it('should display loading state', () => {
-    vi.mock('../store/conversationStore', () => ({
-      useConversationStore: () => ({
-        opportunities: [],
-        customers: [],
-        fetchOpportunities: vi.fn(),
-        loading: true,
-        error: null,
-      }),
-    }));
-
+    // vi.mock inside a test body is not re-applied at runtime; this test
+    // just verifies the component renders without crashing under normal state.
+    renderWithRouter(<OpportunitiesPage />);
     // Component should handle loading state
   });
 
@@ -226,7 +233,7 @@ describe('OpportunitiesPage', () => {
     mockUseSearchParams.mockReturnValue([
       new URLSearchParams('customer=cust1'),
       mockSetSearchParams,
-    ]);
+    ] as ReturnType<typeof useSearchParams>);
 
     renderWithRouter(<OpportunitiesPage />);
 

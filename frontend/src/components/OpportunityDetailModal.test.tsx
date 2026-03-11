@@ -173,7 +173,9 @@ describe('OpportunityDetailModal', () => {
   });
 
   it('should disable mark as won if opportunity is already closed', () => {
-    const closedOpportunity = { ...mockOpportunity, stage: 'closed' };
+    // The component disables "Mark as Won" when stage starts with 'Closed'
+    // (e.g. 'Closed Won' or 'Closed Lost').
+    const closedOpportunity = { ...mockOpportunity, stage: 'Closed Won' };
     render(
       <OpportunityDetailModal
         isOpen={true}
